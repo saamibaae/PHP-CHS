@@ -9,6 +9,10 @@ $stmt = $pdo->prepare("SELECT p.*, a.appointment_id FROM core_prescription p JOI
 $stmt->execute([$presc_id]);
 $presc = $stmt->fetch();
 
+if (!$presc) {
+    die("Prescription not found.");
+}
+
 // Fetch Medicines for Dropdown
 $medicines = $pdo->query("SELECT * FROM core_medicine ORDER BY name")->fetchAll();
 
