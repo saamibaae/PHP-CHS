@@ -1,5 +1,4 @@
 <?php
-// admin/stock_form.php
 require_once __DIR__ . '/../db.php';
 requireRole('ADMIN');
 
@@ -10,7 +9,6 @@ if (!$stock_id) {
     die("Invalid request.");
 }
 
-// Get stock item with verification
 $sql = "SELECT pm.*, m.name as medicine_name, p.pharmacy_id
         FROM core_pharmacymedicine pm
         INNER JOIN core_pharmacy p ON pm.pharmacy_id = p.pharmacy_id

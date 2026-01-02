@@ -1,5 +1,4 @@
 <?php
-// patient/bills.php
 require_once __DIR__ . '/../db.php';
 requireRole('PATIENT');
 
@@ -8,7 +7,6 @@ $stmt = $pdo->prepare("SELECT patient_id FROM core_patient WHERE user_id = ?");
 $stmt->execute([$user_id]);
 $patient_id = $stmt->fetchColumn();
 
-// Standard Bills
 $sql = "SELECT b.*, st.name as service_type_name
         FROM core_bill b
         INNER JOIN core_servicetype st ON b.service_type_id = st.service_type_id

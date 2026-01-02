@@ -1,11 +1,9 @@
 <?php
-// admin/pharmacy_stock.php
 require_once __DIR__ . '/../db.php';
 requireRole('ADMIN');
 
 $hospital_id = $_SESSION['hospital_id'];
 
-// Get Pharmacies
 $stmt = $pdo->prepare("SELECT * FROM core_pharmacy WHERE hospital_id = ?");
 $stmt->execute([$hospital_id]);
 $pharmacies = $stmt->fetchAll();
@@ -14,7 +12,6 @@ $selected_pharmacy = null;
 $pharmacy_id = $_GET['pharmacy'] ?? null;
 
 if ($pharmacy_id) {
-    // Validate pharmacy belongs to hospital
     $stmt = $pdo->prepare("SELECT * FROM core_pharmacy WHERE pharmacy_id = ? AND hospital_id = ?");
     $stmt->execute([$pharmacy_id, $hospital_id]);
     $selected_pharmacy = $stmt->fetch();

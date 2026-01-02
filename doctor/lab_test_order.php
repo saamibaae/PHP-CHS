@@ -1,11 +1,9 @@
 <?php
-// doctor/lab_test_order.php
 require_once __DIR__ . '/../db.php';
 requireRole('DOCTOR');
 
 $user_id = $_SESSION['user_id'];
 
-// Get Doctor Info
 $stmt = $pdo->prepare("SELECT * FROM core_doctor WHERE user_id = ?");
 $stmt->execute([$user_id]);
 $doctor = $stmt->fetch();

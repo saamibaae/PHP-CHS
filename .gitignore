@@ -92,8 +92,8 @@ Thumbs.db
 
 # Project specific
 *.drawio
-!hospital_schema.drawio.png
-!SchemaFinal.drawio (1).pdf
+*.png
+*.pdf
 
 # Temporary files
 *.tmp

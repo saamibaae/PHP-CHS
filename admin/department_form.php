@@ -1,5 +1,4 @@
 <?php
-// admin/department_form.php
 require_once __DIR__ . '/../db.php';
 requireRole('ADMIN');
 
@@ -25,7 +24,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $operating_hours = $_POST['operating_hours'];
     
     if ($dept_id) {
-        // Update
         $sql = "UPDATE core_department 
                 SET dept_name = ?, floor = ?, extension = ?, operating_hours = ?
                 WHERE dept_id = ? AND hospital_id = ?";
@@ -33,7 +31,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute([$dept_name, $floor, $extension, $operating_hours, $dept_id, $hospital_id]);
         setFlash("Department updated successfully.");
     } else {
-        // Insert
         $sql = "INSERT INTO core_department (dept_name, floor, extension, operating_hours, hospital_id)
                 VALUES (?, ?, ?, ?, ?)";
         $stmt = $pdo->prepare($sql);

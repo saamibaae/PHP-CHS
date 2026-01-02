@@ -1,379 +1,200 @@
-# GRAND FInale (PHP)
+# Healthcare Management System
 
-This repository contains the PHP version of the project (web application). The original Flask code has been removed from the main tree — see the archive instructions below if you need the old code.
+A comprehensive PHP-based healthcare management system with MySQL backend, implementing role-based access control for Hospital Admins, Doctors, and Patients.
 
-Quick start
-
-- Requirements: PHP 7.4+ (or PHP 8), a webserver (Apache/Nginx) and MySQL/MariaDB.
-- Database: run `setup_db.php` and `seed_data.php` to initialize and seed the database.
-
-Reinitialize this folder as a fresh GitHub repository
-
-Use the included `reinit_repo.ps1` script to remove any existing git history and create a fresh repository locally. Edit the script to set your new remote URL or run the commands manually (example below).
-
-Manual commands (PowerShell):
-
-```powershell
-Remove-Item -Recurse -Force .git  # only if you want to delete existing history
-git init
-git add .
-git commit -m "Initial commit — PHP conversion"
-git branch -M main
-git remote add origin https://github.com/<your-username>/<your-repo>.git
-git push -u origin main
-```
-
-Files added/changed to make this GitHub-ready:
-
-- `.gitignore` — ignores vendor, node_modules, env files, py caches, IDE settings.
-- `.gitattributes` — normalizes line endings.
-- `reinit_repo.ps1` — helper script to reinitialize git for a fresh repo.
-
-If you want to keep a copy of the old Flask project, restore it from local backups before running `reinit_repo.ps1`.
-
-Troubleshooting
-
-- If you see Flask files or Python artifacts, run `git status` and remove them before committing.
-
-# Centralized Healthcare Management System (CHS Bangladesh)
-
-A comprehensive Flask-based healthcare management system with MySQL backend, implementing role-based access control for Hospital Admins, Doctors, and Patients. **All database operations use explicit raw MySQL queries.**
-
-## 🚀 Features
+## Features
 
 ### For Hospital Admins
-
 - Manage departments, labs, and doctors
 - Update pharmacy stock
 - View hospital statistics and appointment analytics
 - Add new doctors with login credentials
 
 ### For Doctors
-
 - View and manage appointments
 - Create prescriptions with multiple medicines
 - Order lab tests for patients
 - Update diagnosis and appointment status
-- **Auto-billing**: Lab tests automatically generate bills when completed
 
 ### For Patients
-
 - Register and create account
 - View medical profile with blood type and emergency contacts
 - View appointment history
 - Access prescriptions
 - View and track bills
 
-### Business Logic
+## Technology Stack
 
-- **Stock Validation**: Pharmacy bills check stock availability before processing
-- **Prescription Expiry**: Expired prescriptions cannot be used for pharmacy bills
-- **Auto-Billing**: Lab tests automatically generate bills when marked as completed
-- **Multi-Table Inheritance**: Hospital model with PublicHospital and PrivateHospital
+- **Backend**: PHP 7.4+
+- **Database**: MySQL/MariaDB
+- **Frontend**: HTML, CSS (Tailwind), JavaScript
+- **Authentication**: Session-based with role-based access control
+- **Password Hashing**: PHP password_hash (with Werkzeug PBKDF2 support)
 
-## 🛠️ Technology Stack
+## Prerequisites
 
-- **Backend**: Flask 3.0+
-- **Database**: MySQL/MariaDB (using PyMySQL)
-- **ORM**: SQLAlchemy (for model definitions only)
-- **Database Queries**: **Explicit raw MySQL queries** (no ORM usage)
-- **Frontend**: Jinja2 Templates + HTML + CSS
-- **Authentication**: Flask-Login with session management
-- **Forms**: WTForms with CSRF protection
-- **Password Hashing**: Werkzeug
-
-## 📋 Prerequisites
-
-- Python 3.10+
+- PHP 7.4+ (or PHP 8)
 - MySQL/MariaDB server (8.0+)
-- pip (Python package manager)
+- Web server (Apache/Nginx) or PHP built-in server
 
-## 🚀 Quick Start
+## Installation
 
 ### 1. Clone the Repository
 
 ```bash
 git clone <repository-url>
-cd "GRAND FInale"
+cd "GRAND FInale - Copy"
 ```
 
-### 2. Install Dependencies
+### 2. Configure Database
+
+Edit `config.php` and update the database configuration:
+
+```php
+define('DB_HOST', 'localhost');
+define('DB_NAME', 'healthcare_db');
+define('DB_USER', 'root');
+define('DB_PASS', '');
+```
+
+### 3. Setup Database
+
+Run the database setup script:
 
 ```bash
-pip install -r requirements_flask.txt
+php setup_db.php
 ```
 
-### 3. Configure Database
+This will create the database and all necessary tables.
 
-Edit `config.py` and update the database configuration:
+### 4. Seed Initial Data (Optional)
 
-```python
-DB_HOST = 'localhost'
-DB_PORT = 3306
-DB_USER = 'root'
-DB_PASSWORD = 'your_mysql_password'  # Update this
-DB_NAME = 'healthcare_db'
-```
-
-Or use environment variables:
+To populate the database with sample data:
 
 ```bash
-export DB_HOST=localhost
-export DB_PORT=3306
-export DB_USER=root
-export DB_PASSWORD=your_password
-export DB_NAME=healthcare_db
+php seed_data.php
 ```
 
-### 4. Create MySQL Database
+This creates sample hospitals, doctors, and patients. Default password for all users: `password123`
 
-```sql
-CREATE DATABASE healthcare_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-```
+### 5. Run the Application
 
-### 5. Load Initial Data
+Using PHP built-in server:
 
 ```bash
-flask load-data
+php -S localhost:8000
 ```
 
-This will create:
+Or configure your web server (Apache/Nginx) to point to the project directory.
 
-- 5 Public Hospitals (Dhaka Medical College, BSMMU, etc.)
-- 5 Private Hospitals (Square Hospital, United Hospital, etc.)
-- Districts (Dhaka, Chittagong, Sylhet, etc.)
-- Service Types, Qualifications, and Manufacturers
+Access the application at: **http://localhost:8000**
 
-### 6. Run the Application
+## Default Login Credentials
 
-```bash
-python app.py
+After running `seed_data.php`, you can login with:
+
+- **Admin**: username=`admin`, password=`admin123`
+- **Doctor**: username=`dr_rahman`, password=`password123`
+- **Patient**: username=`patient1`, password=`password123`
+
+## User Roles
+
+### Hospital Admin (ADMIN)
+- Manage hospital resources (departments, labs, doctors, pharmacy stock)
+- Can only access their assigned hospital's data
+
+### Doctor (DOCTOR)
+- View appointments, create prescriptions, order lab tests
+- Can only see their own appointments and patients
+
+### Patient (PATIENT)
+- View profile, appointments, prescriptions, and bills
+- Read-only access to their own medical data
+
+## Project Structure
+
+```
+.
+├── config.php              # Database and app configuration
+├── db.php                  # Database connection and helper functions
+├── functions.php           # Shared utility functions
+├── index.php               # Entry point (redirects to login)
+├── login.php               # Login page
+├── register.php            # Patient registration
+├── dashboard.php           # Role-based dashboard router
+├── logout.php              # Logout handler
+├── setup_db.php            # Database initialization script
+├── seed_data.php           # Sample data seeding script
+├── admin/                  # Admin module
+│   ├── dashboard.php
+│   ├── departments.php
+│   ├── department_form.php
+│   ├── doctors.php
+│   ├── doctor_form.php
+│   ├── labs.php
+│   ├── lab_form.php
+│   ├── pharmacy_stock.php
+│   └── stock_form.php
+├── doctor/                 # Doctor module
+│   ├── dashboard.php
+│   ├── appointments.php
+│   ├── appointment_detail.php
+│   ├── prescription_form.php
+│   ├── add_prescription_items.php
+│   └── lab_test_order.php
+├── patient/                # Patient module
+│   ├── dashboard.php
+│   ├── profile.php
+│   ├── appointments.php
+│   ├── appointment_detail.php
+│   └── bills.php
+├── templates/              # Shared templates
+│   ├── header.php
+│   └── footer.php
+└── static/                 # Static assets
+    └── css/
+        └── style.css
 ```
 
-Or using Flask CLI:
+## Database Schema
 
-```bash
-flask run
-```
+The system implements 22+ entities including:
 
-Access the application at: **http://localhost:5000**
-
-## 📖 Detailed Setup Tutorial
-
-See [INITIALIZATION_TUTORIAL.md](INITIALIZATION_TUTORIAL.md) for step-by-step instructions.
-
-## 👥 User Roles & Access
-
-### Hospital Admin
-
-- **Role**: ADMIN
-- **Capabilities**: Manage hospital resources (departments, labs, doctors, pharmacy stock)
-- **Restrictions**: Can only access their assigned hospital's data
-
-### Doctor
-
-- **Role**: DOCTOR
-- **Capabilities**: View appointments, create prescriptions, order lab tests
-- **Restrictions**: Can only see their own appointments and patients
-
-### Patient
-
-- **Role**: PATIENT
-- **Capabilities**: View profile, appointments, prescriptions, and bills
-- **Restrictions**: Read-only access to their own medical data
-
-## 📊 Database Schema
-
-The system implements **22 entities** with **explicit raw MySQL queries**:
-
-- **User Management**: User (CustomUser) with role-based access
+- **User Management**: CustomUser with role-based access
 - **Hospital**: Multi-table inheritance (Hospital → PublicHospital/PrivateHospital)
 - **Medical Staff**: Doctor, DoctorQualification
 - **Patients**: Patient, PatientEmergencyContact
 - **Clinical**: Appointment, Prescription, PrescriptionItem, LabTest
 - **Pharmacy**: Medicine, Pharmacy, PharmacyMedicine, PharmacyBill
-- **Billing**: Bill (with auto-generation from lab tests)
+- **Billing**: Bill
 - **Reference**: District, Qualification, Manufacturer, ServiceType
 
-See [SCHEMA_VERIFICATION.md](SCHEMA_VERIFICATION.md) for complete schema details.
+## Security Features
 
-## 🔄 System Flows
+- Session-based authentication
+- Role-based access control
+- Parameterized SQL queries (SQL injection prevention)
+- Password hashing
+- Hospital data isolation
 
-See [SYSTEM_FLOWS.md](SYSTEM_FLOWS.md) for detailed flow documentation.
-
-### Key Workflows
-
-1. **Patient Registration → Login → Dashboard**
-2. **Doctor: Appointment → Diagnosis → Prescription → Lab Test**
-3. **Lab Test Completion → Auto-Billing**
-4. **Pharmacy: Prescription → Stock Check → Bill Creation**
-
-## 🗂️ Project Structure
-
-```
-.
-├── app.py                    # Flask application factory
-├── config.py                 # Configuration settings
-├── models.py                 # SQLAlchemy models (23 models)
-├── forms.py                  # WTForms (12 forms)
-├── db_utils.py               # Raw SQL utilities
-├── decorators.py             # Role-based decorators
-├── utils.py                  # Business logic utilities
-├── routes/
-│   ├── auth.py              # Authentication routes
-│   ├── admin.py             # Admin routes
-│   ├── doctor.py            # Doctor routes
-│   └── patient.py           # Patient routes
-├── commands/
-│   └── load_data.py         # Initial data loading
-├── templates/               # Jinja2 templates
-├── static/                  # CSS and JS files
-├── requirements_flask.txt    # Flask dependencies
-└── README.md                # This file
-```
-
-## 🔌 API Endpoints
-
-### Authentication
-
-- `GET/POST /` - Login page
-- `GET/POST /login` - Login
-- `POST /logout` - Logout
-- `GET/POST /register` - Patient registration
-- `GET /dashboard` - Role-based dashboard redirect
-
-### Admin Routes
-
-- `GET /admin/dashboard` - Admin dashboard with analytics
-- `GET /admin/departments` - List departments
-- `GET/POST /admin/departments/add` - Add department
-- `GET/POST /admin/departments/<id>/edit` - Edit department
-- `GET /admin/labs` - List labs
-- `GET/POST /admin/labs/add` - Add lab
-- `GET /admin/doctors` - List doctors
-- `GET/POST /admin/doctors/add` - Add doctor
-- `GET /admin/pharmacy/stock` - Manage pharmacy stock
-- `GET/POST /admin/pharmacy/stock/<id>/update` - Update stock
-
-### Doctor Routes
-
-- `GET /doctor/dashboard` - Doctor dashboard
-- `GET /doctor/appointments` - List appointments
-- `GET /doctor/appointments/<id>` - Appointment details
-- `GET/POST /doctor/appointments/<id>/update` - Update appointment
-- `GET/POST /doctor/appointments/<id>/prescription/create` - Create prescription
-- `GET/POST /doctor/prescriptions/<id>/items/add` - Add prescription items
-- `GET/POST /doctor/lab-test/order` - Order lab test
-- `GET/POST /doctor/lab-test/<id>/update` - Update lab test (triggers auto-billing)
-
-### Patient Routes
-
-- `GET /patient/dashboard` - Patient dashboard
-- `GET /patient/profile` - View profile
-- `GET /patient/appointments` - View appointments
-- `GET /patient/appointments/<id>` - Appointment details
-- `GET /patient/bills` - View bills
-
-## 🧪 Testing
-
-### Run Structure Tests
-
-```bash
-python test_application.py
-```
-
-### Manual Testing
-
-See [WORKFLOW_TESTING_GUIDE.md](WORKFLOW_TESTING_GUIDE.md) for comprehensive testing instructions.
-
-## 🔒 Security Features
-
-- ✅ CSRF protection (Flask-WTF)
-- ✅ Session-based authentication (Flask-Login)
-- ✅ Password hashing (Werkzeug)
-- ✅ Role-based access control
-- ✅ Parameterized SQL queries (SQL injection prevention)
-- ✅ Hospital data isolation
-
-## 📝 Database Queries
-
-**All database operations use explicit raw MySQL queries.** No ORM usage in routes.
-
-Example queries:
-
-```python
-# Authentication
-fetch_one("SELECT * FROM core_customuser WHERE username = %s", (username,))
-
-# Admin Dashboard
-fetch_count("SELECT COUNT(*) FROM core_department WHERE hospital_id = %s", (hospital_id,))
-
-# Auto-Billing
-execute_insert("""INSERT INTO core_bill
-                 (patient_id, service_type_id, total_amount, status, due_date, transaction_id, bill_date)
-                 VALUES (%s, %s, %s, %s, %s, %s, %s)""", (...))
-```
-
-See `routes/` directory for all SQL queries.
-
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### MySQL Connection Error
-
 - Ensure MySQL server is running
-- Check database credentials in `config.py`
+- Check database credentials in `config.php`
 - Verify database exists: `SHOW DATABASES;`
 
-### Import Errors
-
-- Install all dependencies: `pip install -r requirements_flask.txt`
-- Ensure you're using Python 3.10+
-
 ### Port Already in Use
-
-- Change port in `app.py`: `app.run(debug=True, host='0.0.0.0', port=5001)`
+- Change port: `php -S localhost:8001`
 
 ### Database Tables Not Found
-
-- Run `flask load-data` to create initial data
+- Run `php setup_db.php` to create tables
 - Ensure database exists and is accessible
 
-## 📚 Documentation
+## Documentation
 
-- [INITIALIZATION_TUTORIAL.md](INITIALIZATION_TUTORIAL.md) - Step-by-step setup guide
-- [SYSTEM_FLOWS.md](SYSTEM_FLOWS.md) - Complete flow documentation
-- [SCHEMA_VERIFICATION.md](SCHEMA_VERIFICATION.md) - Database schema verification
-- [WORKFLOW_TESTING_GUIDE.md](WORKFLOW_TESTING_GUIDE.md) - Testing instructions
-- [FINAL_VERIFICATION.md](FINAL_VERIFICATION.md) - Final verification report
+For detailed project explanation and learning guide, see [PROJECT_EXPLANATION.md](PROJECT_EXPLANATION.md)
 
-## 🔮 Future Enhancements
-
-- PDF prescription generation
-- Email notifications for appointments
-- SMS reminders
-- Online appointment booking for patients
-- Payment gateway integration
-- Medical report uploads
-- Doctor availability calendar
-- Real-time chat with doctors
-
-## 📄 License
+## License
 
 Educational project for university coursework.
-
-## 👨‍💻 Contributors
-
-Developed as part of CSE330 Database Management Systems course project.
-
-## 📞 Support
-
-For issues or questions, refer to the documentation files or contact the development team.
-
----
-
-**Note**: This project uses **explicit raw MySQL queries** throughout. All database operations are visible in the code for educational purposes.
-#   h e a l t h c a r e - m a n a g e m e n t - s y s t e m 
- 
- 
-#   P H P - C H S  
- 

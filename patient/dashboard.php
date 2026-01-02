@@ -1,5 +1,4 @@
 <?php
-// patient/dashboard.php
 require_once '../functions.php';
 checkRole('PATIENT');
 
@@ -9,7 +8,6 @@ $stmt->execute([$user_id]);
 $patient = $stmt->fetch();
 $patient_id = $patient['patient_id'];
 
-// 1. Upcoming Appointments
 $stmt = $pdo->prepare("
     SELECT a.date_and_time, d.full_name as doctor_name, d.specialization
     FROM core_appointment a
@@ -20,7 +18,6 @@ $stmt = $pdo->prepare("
 $stmt->execute([$patient_id]);
 $upcoming_appts = $stmt->fetchAll();
 
-// 2. Bill Status History
 $stmt = $pdo->prepare("
     SELECT bill_date, total_amount, status, service_type_id
     FROM core_bill
@@ -30,7 +27,6 @@ $stmt = $pdo->prepare("
 $stmt->execute([$patient_id]);
 $bills = $stmt->fetchAll();
 
-// 3. Recent Prescriptions
 $stmt = $pdo->prepare("
     SELECT p.prescription_id, p.valid_until, m.name as medicine_name, pi.dosage, pi.instructions
     FROM core_prescription p
@@ -52,8 +48,6 @@ include '../templates/header.php';
 </div>
 
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    
-    <!-- Upcoming Appointments -->
     <div class="bg-white shadow rounded-lg overflow-hidden border-t-4 border-blue-500">
         <div class="px-6 py-4 bg-white border-b border-gray-200 flex justify-between items-center">
             <h3 class="text-lg font-medium text-gray-900">
@@ -82,7 +76,6 @@ include '../templates/header.php';
         </ul>
     </div>
 
-    <!-- Billing History -->
     <div class="bg-white shadow rounded-lg overflow-hidden border-t-4 border-green-500">
         <div class="px-6 py-4 bg-white border-b border-gray-200 flex justify-between items-center">
             <h3 class="text-lg font-medium text-gray-900">
@@ -121,7 +114,6 @@ include '../templates/header.php';
         </div>
     </div>
 
-    <!-- Active Prescriptions (Spans 2 columns on medium screens) -->
     <div class="bg-white shadow rounded-lg overflow-hidden md:col-span-2 border-t-4 border-purple-500">
         <div class="px-6 py-4 bg-white border-b border-gray-200">
             <h3 class="text-lg font-medium text-gray-900">

@@ -1,5 +1,4 @@
 <?php
-// register.php
 require_once 'db.php';
 
 if (isLoggedIn()) {
@@ -100,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
     <div class="container">
-        <div class="login-container" style="max_width: 800px;"> <!-- Wider for registration -->
+        <div class="login-container" style="max_width: 800px;">
             <div class="login-card">
                 <h2>🏥 CHS Bangladesh</h2>
                 <h3 class="text-center mb-4">Patient Registration</h3>

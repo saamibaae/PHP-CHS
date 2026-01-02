@@ -1,13 +1,6 @@
 <?php
-// functions.php
-// Shared logic and helper functions
+require_once 'db.php';
 
-require_once 'db.php'; // Includes PDO connection and session_start()
-
-/**
- * Check if the user has a specific role.
- * Redirects to login if not authenticated, or shows error if unauthorized.
- */
 function checkRole($required_role) {
     if (!isset($_SESSION['user_id'])) {
         header('Location: /login.php');
@@ -15,7 +8,6 @@ function checkRole($required_role) {
     }
     
     if ($_SESSION['role'] !== $required_role) {
-        // Simple error page for unauthorized access
         die("
             <div class='flex items-center justify-center h-screen bg-gray-100'>
                 <div class='text-center'>
@@ -28,30 +20,18 @@ function checkRole($required_role) {
     }
 }
 
-/**
- * Format currency (BDT)
- */
 function formatCurrency($amount) {
     return 'BDT ' . number_format($amount, 2);
 }
 
-/**
- * Format date nicely
- */
 function formatDate($date_string) {
     return date('M d, Y', strtotime($date_string));
 }
 
-/**
- * Format datetime nicely
- */
 function formatDateTime($date_string) {
     return date('M d, Y h:i A', strtotime($date_string));
 }
 
-/**
- * Get status badge classes for Tailwind
- */
 function getStatusBadgeClass($status) {
     $status = strtolower($status);
     switch ($status) {

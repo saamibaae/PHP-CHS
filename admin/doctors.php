@@ -1,11 +1,9 @@
 <?php
-// admin/doctors.php
 require_once __DIR__ . '/../db.php';
 requireRole('ADMIN');
 
 $hospital_id = $_SESSION['hospital_id'];
 
-// Get Doctors
 $sql = "SELECT d.*, dept.dept_name 
         FROM core_doctor d
         LEFT JOIN core_department dept ON d.dept_id = dept.dept_id

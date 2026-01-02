@@ -1,11 +1,9 @@
 <?php
-// admin/departments.php
 require_once __DIR__ . '/../db.php';
 requireRole('ADMIN');
 
 $hospital_id = $_SESSION['hospital_id'];
 
-// Get Departments
 $stmt = $pdo->prepare("SELECT * FROM core_department WHERE hospital_id = ? ORDER BY dept_name");
 $stmt->execute([$hospital_id]);
 $departments = $stmt->fetchAll();

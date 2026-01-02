@@ -1,5 +1,4 @@
 <?php
-// admin/lab_form.php
 require_once __DIR__ . '/../db.php';
 requireRole('ADMIN');
 
@@ -10,7 +9,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $location = $_POST['location'];
     $phone = $_POST['phone'];
     
-    // Insert
     $sql = "INSERT INTO core_lab (lab_name, hospital_id, location, phone) VALUES (?, ?, ?, ?)";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$lab_name, $hospital_id, $location, $phone]);

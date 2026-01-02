@@ -1,11 +1,9 @@
 <?php
-// admin/doctor_form.php
 require_once __DIR__ . '/../db.php';
 requireRole('ADMIN');
 
 $hospital_id = $_SESSION['hospital_id'];
 
-// Get Departments for dropdown
 $stmt = $pdo->prepare("SELECT dept_id, dept_name FROM core_department WHERE hospital_id = ? ORDER BY dept_name");
 $stmt->execute([$hospital_id]);
 $departments = $stmt->fetchAll();
@@ -13,12 +11,10 @@ $departments = $stmt->fetchAll();
 $error = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // User fields
     $username = $_POST['username'];
     $password = $_POST['password'];
     $email = $_POST['email'];
     
-    // Doctor fields
     $license_no = $_POST['license_no'];
     $full_name = $_POST['full_name'];
     $specialization = $_POST['specialization'];
@@ -29,7 +25,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $join_date = $_POST['join_date'];
     $dept_id = $_POST['dept_id'] ?: null;
 
-    // Check duplicates
     $stmt = $pdo->prepare("SELECT id FROM core_customuser WHERE username = ?");
     $stmt->execute([$username]);
     if ($stmt->fetch()) {
@@ -46,7 +41,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $pdo->beginTransaction();
 
-            // Create User
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
             $name_parts = explode(' ', $full_name, 2);
             $first_name = $name_parts[0];
@@ -62,7 +56,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$username, $hashed_password, $email, $first_name, $last_name, $now, $hospital_id]);
             $user_id = $pdo->lastInsertId();
 
-            // Create Doctor
             $sql_doctor = "INSERT INTO core_doctor 
                            (license_no, full_name, specialization, phone, email, experience_yrs, 
                             gender, shift_timing, join_date, hospital_id, dept_id, user_id)

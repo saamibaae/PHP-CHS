@@ -1,11 +1,9 @@
 <?php
-// admin/labs.php
 require_once __DIR__ . '/../db.php';
 requireRole('ADMIN');
 
 $hospital_id = $_SESSION['hospital_id'];
 
-// Get Labs
 $stmt = $pdo->prepare("SELECT * FROM core_lab WHERE hospital_id = ? ORDER BY lab_name");
 $stmt->execute([$hospital_id]);
 $labs = $stmt->fetchAll();

@@ -1,5 +1,4 @@
 <?php
-// patient/appointments.php
 require_once __DIR__ . '/../db.php';
 requireRole('PATIENT');
 
@@ -8,7 +7,6 @@ $stmt = $pdo->prepare("SELECT patient_id FROM core_patient WHERE user_id = ?");
 $stmt->execute([$user_id]);
 $patient_id = $stmt->fetchColumn();
 
-// Get Appointments
 $sql = "SELECT a.*, d.full_name as doctor_name, d.specialization, h.name as hospital_name
         FROM core_appointment a
         INNER JOIN core_doctor d ON a.doctor_id = d.doctor_id

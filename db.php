@@ -1,5 +1,4 @@
 <?php
-// db.php
 require_once 'config.php';
 
 try {
@@ -10,19 +9,16 @@ try {
         PDO::ATTR_EMULATE_PREPARES   => false,
     ];
     
-    // Global PDO instance
     $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
     
 } catch (\PDOException $e) {
     throw new \PDOException($e->getMessage(), (int)$e->getCode());
 }
 
-// Helper function to check login
 function isLoggedIn() {
     return isset($_SESSION['user_id']);
 }
 
-// Helper to require login
 function requireLogin() {
     if (!isLoggedIn()) {
         header('Location: /login.php');
@@ -30,7 +26,6 @@ function requireLogin() {
     }
 }
 
-// Helper to check role
 function requireRole($role) {
     requireLogin();
     if ($_SESSION['role'] !== $role) {
@@ -38,7 +33,6 @@ function requireRole($role) {
     }
 }
 
-// Helper for flash messages
 function setFlash($message, $type = 'success') {
     $_SESSION['flash'] = ['message' => $message, 'type' => $type];
 }
@@ -52,10 +46,8 @@ function getFlash() {
     return null;
 }
 
-// Password Verification (Supports Werkzeug PBKDF2)
 function verifyPassword($password, $hash) {
     if (strpos($hash, 'pbkdf2:sha256') === 0) {
-        // Handle Werkzeug hash: pbkdf2:sha256:iterations$salt$hash
         $parts = explode('$', $hash);
         if (count($parts) === 3) {
             $params = explode(':', $parts[0]);
@@ -69,7 +61,6 @@ function verifyPassword($password, $hash) {
             }
         }
     }
-    // Fallback to standard PHP password_verify (Bcrypt/Argon2)
     return password_verify($password, $hash);
 }
 ?>

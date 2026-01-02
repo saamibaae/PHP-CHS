@@ -1,5 +1,4 @@
 <?php
-// dashboard.php
 require_once 'db.php';
 requireLogin();
 

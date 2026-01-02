@@ -1,5 +1,4 @@
 <?php
-// patient/appointment_detail.php
 require_once __DIR__ . '/../db.php';
 requireRole('PATIENT');
 

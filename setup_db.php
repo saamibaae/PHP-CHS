@@ -1,7 +1,4 @@
 <?php
-// setup_db.php
-// Script to initialize the database and tables
-
 $host = 'localhost';
 $user = 'root';
 $pass = '';
@@ -14,27 +11,21 @@ $options = [
 ];
 
 try {
-    // 1. Connect to MySQL Server (no DB selected)
     $pdo = new PDO("mysql:host=$host;charset=$charset", $user, $pass, $options);
     echo "Connected to MySQL server.\n";
 
-    // 2. Create Database
     $pdo->exec("CREATE DATABASE IF NOT EXISTS healthcare_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
     echo "Database 'healthcare_db' created or already exists.\n";
 
-    // 3. Select Database
     $pdo->exec("USE healthcare_db");
 
-    // 4. Create Tables
     $queries = [
-        // District
         "CREATE TABLE IF NOT EXISTS core_district (
             district_id INT AUTO_INCREMENT PRIMARY KEY,
             name VARCHAR(100) NOT NULL,
             division VARCHAR(100) NOT NULL
         )",
 
-        // Hospital
         "CREATE TABLE IF NOT EXISTS core_hospital (
             hospital_id INT AUTO_INCREMENT PRIMARY KEY,
             name VARCHAR(200) NOT NULL,
@@ -51,7 +42,6 @@ try {
             FOREIGN KEY (district_id) REFERENCES core_district(district_id)
         )",
 
-        // Public Hospital
         "CREATE TABLE IF NOT EXISTS core_publichospital (
             hospital_id INT PRIMARY KEY,
             govt_funding DECIMAL(15, 2) NOT NULL,
@@ -60,7 +50,6 @@ try {
             FOREIGN KEY (hospital_id) REFERENCES core_hospital(hospital_id) ON DELETE CASCADE
         )",
 
-        // Private Hospital
         "CREATE TABLE IF NOT EXISTS core_privatehospital (
             hospital_id INT PRIMARY KEY,
             owner_name VARCHAR(200) NOT NULL,
@@ -68,7 +57,6 @@ try {
             FOREIGN KEY (hospital_id) REFERENCES core_hospital(hospital_id) ON DELETE CASCADE
         )",
 
-        // User (CustomUser)
         "CREATE TABLE IF NOT EXISTS core_customuser (
             id INT AUTO_INCREMENT PRIMARY KEY,
             username VARCHAR(150) UNIQUE NOT NULL,
@@ -86,7 +74,6 @@ try {
             FOREIGN KEY (hospital_id) REFERENCES core_hospital(hospital_id)
         )",
 
-        // Department
         "CREATE TABLE IF NOT EXISTS core_department (
             dept_id INT AUTO_INCREMENT PRIMARY KEY,
             dept_name VARCHAR(100) NOT NULL,
@@ -99,7 +86,6 @@ try {
             FOREIGN KEY (hospital_id) REFERENCES core_hospital(hospital_id) ON DELETE CASCADE
         )",
 
-        // Doctor
         "CREATE TABLE IF NOT EXISTS core_doctor (
             doctor_id INT AUTO_INCREMENT PRIMARY KEY,
             license_no VARCHAR(100) UNIQUE NOT NULL,
@@ -119,14 +105,12 @@ try {
             FOREIGN KEY (user_id) REFERENCES core_customuser(id)
         )",
 
-        // Qualification
         "CREATE TABLE IF NOT EXISTS core_qualification (
             qualification_id INT AUTO_INCREMENT PRIMARY KEY,
             code VARCHAR(20) UNIQUE NOT NULL,
             degree_name VARCHAR(200) NOT NULL
         )",
 
-        // Doctor Qualification
         "CREATE TABLE IF NOT EXISTS core_doctorqualification (
             doctor_qualification_id INT AUTO_INCREMENT PRIMARY KEY,
             doctor_id INT NOT NULL,
@@ -138,7 +122,6 @@ try {
             FOREIGN KEY (qualification_id) REFERENCES core_qualification(qualification_id) ON DELETE CASCADE
         )",
 
-        // Lab
         "CREATE TABLE IF NOT EXISTS core_lab (
             lab_id INT AUTO_INCREMENT PRIMARY KEY,
             lab_name VARCHAR(200) NOT NULL,
@@ -148,7 +131,6 @@ try {
             FOREIGN KEY (hospital_id) REFERENCES core_hospital(hospital_id) ON DELETE CASCADE
         )",
 
-        // Pharmacy
         "CREATE TABLE IF NOT EXISTS core_pharmacy (
             pharmacy_id INT AUTO_INCREMENT PRIMARY KEY,
             name VARCHAR(200) NOT NULL,
@@ -158,7 +140,6 @@ try {
             FOREIGN KEY (hospital_id) REFERENCES core_hospital(hospital_id) ON DELETE CASCADE
         )",
 
-        // Manufacturer
         "CREATE TABLE IF NOT EXISTS core_manufacturer (
             manufacturer_id INT AUTO_INCREMENT PRIMARY KEY,
             name VARCHAR(200) NOT NULL,
@@ -167,7 +148,6 @@ try {
             license_no VARCHAR(100) UNIQUE NOT NULL
         )",
 
-        // Medicine
         "CREATE TABLE IF NOT EXISTS core_medicine (
             medicine_id INT AUTO_INCREMENT PRIMARY KEY,
             name VARCHAR(200) NOT NULL,
@@ -178,7 +158,6 @@ try {
             FOREIGN KEY (manufacturer_id) REFERENCES core_manufacturer(manufacturer_id) ON DELETE CASCADE
         )",
 
-        // Pharmacy Medicine (Stock)
         "CREATE TABLE IF NOT EXISTS core_pharmacymedicine (
             pharmacy_medicine_id INT AUTO_INCREMENT PRIMARY KEY,
             pharmacy_id INT NOT NULL,
@@ -193,7 +172,6 @@ try {
             FOREIGN KEY (medicine_id) REFERENCES core_medicine(medicine_id) ON DELETE CASCADE
         )",
 
-        // Patient
         "CREATE TABLE IF NOT EXISTS core_patient (
             patient_id INT AUTO_INCREMENT PRIMARY KEY,
             national_id VARCHAR(50) UNIQUE NOT NULL,
@@ -214,7 +192,6 @@ try {
             FOREIGN KEY (user_id) REFERENCES core_customuser(id)
         )",
 
-        // Patient Emergency Contact
         "CREATE TABLE IF NOT EXISTS core_patientemergencycontact (
             contact_id INT AUTO_INCREMENT PRIMARY KEY,
             patient_id INT NOT NULL,
@@ -225,14 +202,12 @@ try {
             FOREIGN KEY (patient_id) REFERENCES core_patient(patient_id) ON DELETE CASCADE
         )",
 
-        // Service Type
         "CREATE TABLE IF NOT EXISTS core_servicetype (
             service_type_id INT AUTO_INCREMENT PRIMARY KEY,
             name VARCHAR(100) NOT NULL,
             description TEXT
         )",
 
-        // Appointment
         "CREATE TABLE IF NOT EXISTS core_appointment (
             appointment_id INT AUTO_INCREMENT PRIMARY KEY,
             patient_id INT NOT NULL,
@@ -248,7 +223,6 @@ try {
             FOREIGN KEY (doctor_id) REFERENCES core_doctor(doctor_id) ON DELETE CASCADE
         )",
 
-        // Lab Test
         "CREATE TABLE IF NOT EXISTS core_labtest (
             test_id INT AUTO_INCREMENT PRIMARY KEY,
             lab_id INT NOT NULL,
@@ -265,7 +239,6 @@ try {
             FOREIGN KEY (ordered_by_id) REFERENCES core_doctor(doctor_id)
         )",
 
-        // Prescription
         "CREATE TABLE IF NOT EXISTS core_prescription (
             prescription_id INT AUTO_INCREMENT PRIMARY KEY,
             appointment_id INT NOT NULL,
@@ -275,7 +248,6 @@ try {
             FOREIGN KEY (appointment_id) REFERENCES core_appointment(appointment_id) ON DELETE CASCADE
         )",
 
-        // Prescription Item
         "CREATE TABLE IF NOT EXISTS core_prescriptionitem (
             item_id INT AUTO_INCREMENT PRIMARY KEY,
             prescription_id INT NOT NULL,
@@ -290,7 +262,6 @@ try {
             FOREIGN KEY (medicine_id) REFERENCES core_medicine(medicine_id)
         )",
 
-        // Bill
         "CREATE TABLE IF NOT EXISTS core_bill (
             bill_id INT AUTO_INCREMENT PRIMARY KEY,
             patient_id INT NOT NULL,
@@ -307,7 +278,6 @@ try {
             FOREIGN KEY (service_type_id) REFERENCES core_servicetype(service_type_id)
         )",
 
-        // Pharmacy Bill
         "CREATE TABLE IF NOT EXISTS core_pharmacybill (
             pharmacy_bill_id INT AUTO_INCREMENT PRIMARY KEY,
             pharmacy_id INT NOT NULL,
@@ -325,27 +295,20 @@ try {
     }
     echo "All tables created successfully.\n";
 
-    // 5. Seed Data (Optional but helpful)
-    // Check if district exists
     $stmt = $pdo->query("SELECT COUNT(*) FROM core_district");
     if ($stmt->fetchColumn() == 0) {
         echo "Seeding initial data...\n";
         
-        // District
         $pdo->exec("INSERT INTO core_district (name, division) VALUES ('Dhaka Central', 'Dhaka')");
         $district_id = $pdo->lastInsertId();
 
-        // Hospital
         $pdo->exec("INSERT INTO core_hospital (name, address, phone, capacity, registration_no, email, established_date, district_id, hospital_type) 
                     VALUES ('Dhaka Medical College', 'Secretariat Road, Dhaka', '01700000000', 2500, 'REG-12345', 'info@dmc.gov.bd', '1946-07-10', $district_id, 'public')");
         $hospital_id = $pdo->lastInsertId();
 
-        // Public Hospital Detail
         $pdo->exec("INSERT INTO core_publichospital (hospital_id, govt_funding, accreditation_level, subsidies)
                     VALUES ($hospital_id, 10000000.00, 'A+', 500000.00)");
 
-        // Admin User
-        // Password is 'admin123'
         $password_hash = password_hash('admin123', PASSWORD_DEFAULT);
         $pdo->exec("INSERT INTO core_customuser (username, password, email, first_name, last_name, is_staff, is_superuser, role, hospital_id)
                     VALUES ('admin', '$password_hash', 'admin@dmc.gov.bd', 'Super', 'Admin', 1, 1, 'ADMIN', $hospital_id)");

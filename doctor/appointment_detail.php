@@ -1,5 +1,4 @@
 <?php
-// doctor/appointment_detail.php
 require_once __DIR__ . '/../db.php';
 requireRole('DOCTOR');
 
@@ -8,12 +7,10 @@ $appointment_id = $_GET['id'] ?? null;
 
 if (!$appointment_id) die("Invalid ID");
 
-// Get Doctor ID
 $stmt = $pdo->prepare("SELECT doctor_id FROM core_doctor WHERE user_id = ?");
 $stmt->execute([$user_id]);
 $doctor_id = $stmt->fetchColumn();
 
-// Get Appointment Details
 $sql = "SELECT a.*, p.full_name as patient_name, p.date_of_birth, p.gender, p.blood_type
         FROM core_appointment a
         INNER JOIN core_patient p ON a.patient_id = p.patient_id
@@ -24,7 +21,6 @@ $appointment = $stmt->fetch();
 
 if (!$appointment) die("Appointment not found.");
 
-// Handle Update
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $status = $_POST['status'];
     $diagnosis = $_POST['diagnosis'];
@@ -39,13 +35,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
-// Get Prescriptions
 $sql = "SELECT * FROM core_prescription WHERE appointment_id = ?";
 $stmt = $pdo->prepare($sql);
 $stmt->execute([$appointment_id]);
 $prescriptions = $stmt->fetchAll();
 
-// For each prescription, get items (This is N+1 query problem, but keeping queries visible as requested)
 foreach ($prescriptions as &$presc) {
     $sql = "SELECT pi.*, m.name as medicine_name 
             FROM core_prescriptionitem pi

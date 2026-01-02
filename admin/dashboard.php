@@ -1,11 +1,9 @@
 <?php
-// admin/dashboard.php
 require_once '../functions.php';
 checkRole('ADMIN');
 
 $hospital_id = $_SESSION['hospital_id'];
 
-// 1. Capacity vs Load
 $stmt = $pdo->prepare("SELECT capacity, name FROM core_hospital WHERE hospital_id = ?");
 $stmt->execute([$hospital_id]);
 $hospital_info = $stmt->fetch();
@@ -14,7 +12,6 @@ $stmt = $pdo->prepare("SELECT COUNT(DISTINCT patient_id) FROM core_appointment W
 $stmt->execute([$hospital_id]);
 $total_patients = $stmt->fetchColumn();
 
-// 2. Active Departments
 $stmt = $pdo->prepare("
     SELECT d.dept_name, d.floor, 
     (SELECT COUNT(*) FROM core_doctor WHERE dept_id = d.dept_id) as doctor_count 
@@ -24,7 +21,6 @@ $stmt = $pdo->prepare("
 $stmt->execute([$hospital_id]);
 $departments = $stmt->fetchAll();
 
-// 3. Recent Billing Summaries
 $stmt = $pdo->prepare("
     SELECT b.bill_id, b.total_amount, b.status, b.bill_date, p.full_name as patient_name
     FROM core_bill b
@@ -47,9 +43,7 @@ include '../templates/header.php';
     <p class="mt-1 text-sm text-gray-600">Hospital Administration Dashboard</p>
 </div>
 
-<!-- Grid Layout -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-    <!-- Capacity Card -->
     <div class="bg-white overflow-hidden shadow rounded-lg">
         <div class="p-5">
             <div class="flex items-center">
@@ -76,7 +70,6 @@ include '../templates/header.php';
         </div>
     </div>
 
-    <!-- Active Depts Card -->
     <div class="bg-white overflow-hidden shadow rounded-lg col-span-1 md:col-span-2">
         <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
             <h3 class="text-lg leading-6 font-medium text-gray-900">Active Departments</h3>
@@ -105,7 +98,6 @@ include '../templates/header.php';
     </div>
 </div>
 
-<!-- Recent Billing -->
 <div class="bg-white shadow overflow-hidden sm:rounded-lg">
     <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
         <div>

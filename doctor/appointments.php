@@ -1,11 +1,9 @@
 <?php
-// doctor/appointments.php
 require_once __DIR__ . '/../db.php';
 requireRole('DOCTOR');
 
 $user_id = $_SESSION['user_id'];
 
-// Get Doctor ID
 $stmt = $pdo->prepare("SELECT doctor_id FROM core_doctor WHERE user_id = ?");
 $stmt->execute([$user_id]);
 $doctor = $stmt->fetch();

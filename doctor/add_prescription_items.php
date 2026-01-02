@@ -1,12 +1,10 @@
 <?php
-// doctor/add_prescription_items.php
 require_once __DIR__ . '/../db.php';
 requireRole('DOCTOR');
 
 $presc_id = $_GET['prescription_id'] ?? null;
 if (!$presc_id) die("Invalid request");
 
-// Fetch Prescription Info
 $stmt = $pdo->prepare("SELECT p.*, a.appointment_id FROM core_prescription p JOIN core_appointment a ON p.appointment_id = a.appointment_id WHERE p.prescription_id = ?");
 $stmt->execute([$presc_id]);
 $presc = $stmt->fetch();

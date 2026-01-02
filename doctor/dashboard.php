@@ -1,5 +1,4 @@
 <?php
-// doctor/dashboard.php
 require_once '../functions.php';
 checkRole('DOCTOR');
 
@@ -9,7 +8,6 @@ $stmt->execute([$user_id]);
 $doctor = $stmt->fetch();
 $doctor_id = $doctor['doctor_id'];
 
-// 1. Today's Schedule
 $today = date('Y-m-d');
 $stmt = $pdo->prepare("
     SELECT a.appointment_id, a.date_and_time, a.symptoms, a.status, p.full_name, p.patient_id
@@ -31,13 +29,12 @@ include '../templates/header.php';
     </div>
     <div class="flex space-x-3">
         <a href="/doctor/lab_test_order.php" class="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-bold py-2 px-4 rounded inline-flex items-center">
-            <i class="fas fa-flask mr-2"></i> Order Lab Test
+            <i class="fas fa-vial mr-2"></i> Order Lab Test
         </a>
     </div>
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <!-- Schedule Section -->
     <div class="lg:col-span-2 bg-white shadow rounded-lg overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-200 bg-blue-50">
             <h2 class="text-lg font-medium text-blue-900">Today's Schedule (<?= date('M d') ?>)</h2>
@@ -80,7 +77,6 @@ include '../templates/header.php';
         </div>
     </div>
 
-    <!-- Quick Actions / Stats -->
     <div class="space-y-6">
         <div class="bg-white shadow rounded-lg p-6">
             <h3 class="text-lg font-medium text-gray-900 mb-4">Quick Issue</h3>
