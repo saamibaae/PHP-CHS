@@ -11,6 +11,10 @@ $stmt = $pdo->prepare("SELECT doctor_id FROM core_doctor WHERE user_id = ?");
 $stmt->execute([$user_id]);
 $doctor_id = $stmt->fetchColumn();
 
+if (!$doctor_id) {
+    die("Doctor record not found. Please contact administrator.");
+}
+
 $sql = "SELECT a.*, p.full_name as patient_name, p.date_of_birth, p.gender, p.blood_type
         FROM core_appointment a
         INNER JOIN core_patient p ON a.patient_id = p.patient_id

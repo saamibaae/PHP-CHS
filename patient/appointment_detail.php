@@ -11,6 +11,10 @@ $stmt = $pdo->prepare("SELECT patient_id FROM core_patient WHERE user_id = ?");
 $stmt->execute([$user_id]);
 $patient_id = $stmt->fetchColumn();
 
+if (!$patient_id) {
+    die("Patient record not found. Please contact administrator.");
+}
+
 // Get Appointment
 $sql = "SELECT a.*, d.full_name as doctor_name, d.specialization, 
                dept.dept_name, h.name as hospital_name

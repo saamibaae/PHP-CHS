@@ -6,6 +6,11 @@ $user_id = $_SESSION['user_id'];
 $stmt = $pdo->prepare("SELECT patient_id, full_name, blood_type FROM core_patient WHERE user_id = ?");
 $stmt->execute([$user_id]);
 $patient = $stmt->fetch();
+
+if (!$patient) {
+    die("Patient record not found. Please contact administrator.");
+}
+
 $patient_id = $patient['patient_id'];
 
 $stmt = $pdo->prepare("

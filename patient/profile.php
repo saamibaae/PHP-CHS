@@ -7,6 +7,10 @@ $stmt = $pdo->prepare("SELECT * FROM core_patient WHERE user_id = ?");
 $stmt->execute([$user_id]);
 $patient = $stmt->fetch();
 
+if (!$patient) {
+    die("Patient record not found. Please contact administrator.");
+}
+
 $patient_id = $patient['patient_id'];
 $stmt = $pdo->prepare("SELECT * FROM core_patientemergencycontact WHERE patient_id = ?");
 $stmt->execute([$patient_id]);

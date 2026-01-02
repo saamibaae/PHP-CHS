@@ -8,6 +8,10 @@ $stmt = $pdo->prepare("SELECT capacity, name FROM core_hospital WHERE hospital_i
 $stmt->execute([$hospital_id]);
 $hospital_info = $stmt->fetch();
 
+if (!$hospital_info) {
+    die("Hospital record not found. Please contact administrator.");
+}
+
 $stmt = $pdo->prepare("SELECT COUNT(DISTINCT patient_id) FROM core_appointment WHERE doctor_id IN (SELECT doctor_id FROM core_doctor WHERE hospital_id = ?)");
 $stmt->execute([$hospital_id]);
 $total_patients = $stmt->fetchColumn();

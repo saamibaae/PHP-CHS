@@ -6,6 +6,11 @@ $user_id = $_SESSION['user_id'];
 $stmt = $pdo->prepare("SELECT doctor_id, full_name, specialization FROM core_doctor WHERE user_id = ?");
 $stmt->execute([$user_id]);
 $doctor = $stmt->fetch();
+
+if (!$doctor) {
+    die("Doctor record not found. Please contact administrator.");
+}
+
 $doctor_id = $doctor['doctor_id'];
 
 $today = date('Y-m-d');
