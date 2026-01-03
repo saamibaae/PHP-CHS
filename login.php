@@ -12,7 +12,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = $_POST['username'] ?? '';
     $password = $_POST['password'] ?? '';
     
-    $stmt = $pdo->prepare("SELECT * FROM core_customuser WHERE username = ?");
+    // Case-insensitive username lookup
+    $stmt = $pdo->prepare("SELECT * FROM core_customuser WHERE LOWER(username) = LOWER(?)");
     $stmt->execute([$username]);
     $user = $stmt->fetch();
     

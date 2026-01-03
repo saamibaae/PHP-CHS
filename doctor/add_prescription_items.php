@@ -13,12 +13,9 @@ if (!$presc) {
     die("Prescription not found.");
 }
 
-// Fetch Medicines for Dropdown
-$medicines = $pdo->query("SELECT * FROM core_medicine ORDER BY name")->fetchAll();
-
 // Handle Add Item
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $medicine_id = $_POST['medicine_id'];
+    $medicine_name = trim($_POST['medicine_name']);
     $dosage = $_POST['dosage'];
     $frequency = $_POST['frequency'];
     $duration = $_POST['duration'];
@@ -26,6 +23,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $before_after = $_POST['before_after_meal'];
     $instructions = $_POST['instructions'];
     
+    if (empty($medicine_name)) {
+        setFlash("Medicine name is required.", "error");
+        header("Location: /doctor/add_prescription_items.php?prescription_id=" . $presc_id);
+        exit;
+    }
+    
+    // Get or create a default manufacturer
+    $stmt = $pdo->query("SELECT manufacturer_id FROM core_manufacturer LIMIT 1");
+    $manufacturer_id = $stmt->fetchColumn();
+    
+    if (!$manufacturer_id) {
+        // Create a default manufacturer if none exists
+        $pdo->exec("INSERT INTO core_manufacturer (name, phone, address, license_no) 
+                    VALUES ('Generic Manufacturer', '01700000000', 'Dhaka, Bangladesh', 'MANUF-001')");
+        $manufacturer_id = $pdo->lastInsertId();
+    }
+    
+    // Check if medicine exists, if not create it
+    $stmt = $pdo->prepare("SELECT medicine_id FROM core_medicine WHERE LOWER(name) = LOWER(?)");
+    $stmt->execute([$medicine_name]);
+    $medicine_id = $stmt->fetchColumn();
+    
+    if (!$medicine_id) {
+        // Create medicine automatically
+        $stmt = $pdo->prepare("INSERT INTO core_medicine (name, type, dosage_info, manufacturer_id) 
+                              VALUES (?, 'General', 'As prescribed', ?)");
+        $stmt->execute([$medicine_name, $manufacturer_id]);
+        $medicine_id = $pdo->lastInsertId();
+    }
+    
+    // Add prescription item
     $sql = "INSERT INTO core_prescriptionitem 
             (prescription_id, medicine_id, dosage, frequency, duration, quantity, before_after_meal, instructions)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
@@ -59,12 +87,9 @@ include __DIR__ . '/../templates/header.php';
             <div class="card-body">
                 <form method="post">
                     <div class="form-group">
-                        <label>Medicine</label>
-                        <select name="medicine_id" class="form-control select2" required>
-                            <?php foreach ($medicines as $m): ?>
-                                <option value="<?= $m['medicine_id'] ?>"><?= htmlspecialchars($m['name']) ?> (<?= htmlspecialchars($m['type']) ?>)</option>
-                            <?php endforeach; ?>
-                        </select>
+                        <label>Medicine Name</label>
+                        <input type="text" name="medicine_name" class="form-control" placeholder="e.g. Paracetamol, Amoxicillin, etc." required autofocus>
+                        <small class="form-text text-muted">Type the medicine name - it will be added automatically if it doesn't exist.</small>
                     </div>
                     
                     <div class="form-row">
@@ -90,7 +115,7 @@ include __DIR__ . '/../templates/header.php';
                     </div>
                     
                     <div class="form-group">
-                        <label>Instructions</label>
+                        <label>When to Take</label>
                         <select name="before_after_meal" class="form-control">
                             <option value="After">After Meal</option>
                             <option value="Before">Before Meal</option>
@@ -99,8 +124,8 @@ include __DIR__ . '/../templates/header.php';
                     </div>
                     
                     <div class="form-group">
-                        <label>Additional Notes</label>
-                        <input type="text" name="instructions" class="form-control">
+                        <label>Additional Instructions</label>
+                        <input type="text" name="instructions" class="form-control" placeholder="e.g. Take with plenty of water">
                     </div>
                     
                     <button type="submit" class="btn btn-primary btn-block">Add Medicine</button>

@@ -26,6 +26,9 @@ include __DIR__ . '/../templates/header.php';
 
 <div class="page-header">
     <h2>My Appointments</h2>
+    <a href="/patient/book_appointment.php" class="btn btn-primary">
+        <i class="fas fa-calendar-plus mr-2"></i>Book New Appointment
+    </a>
 </div>
 
 <div class="card">
@@ -41,6 +44,13 @@ include __DIR__ . '/../templates/header.php';
                 </tr>
             </thead>
             <tbody>
+                <?php if (empty($appointments)): ?>
+                <tr>
+                    <td colspan="5" class="text-center py-8 text-gray-500">
+                        No appointments found. Your appointment history will appear here once you have appointments.
+                    </td>
+                </tr>
+                <?php else: ?>
                 <?php foreach ($appointments as $apt): ?>
                 <tr>
                     <td><?= date('M d, Y H:i', strtotime($apt['date_and_time'])) ?></td>
@@ -59,6 +69,7 @@ include __DIR__ . '/../templates/header.php';
                     </td>
                 </tr>
                 <?php endforeach; ?>
+                <?php endif; ?>
             </tbody>
         </table>
     </div>

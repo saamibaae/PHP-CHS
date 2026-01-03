@@ -17,7 +17,7 @@ $stmt = $pdo->prepare("
     SELECT a.date_and_time, d.full_name as doctor_name, d.specialization
     FROM core_appointment a
     JOIN core_doctor d ON a.doctor_id = d.doctor_id
-    WHERE a.patient_id = ? AND a.date_and_time >= NOW()
+    WHERE a.patient_id = ? AND a.date_and_time >= NOW() AND a.status != 'Completed'
     ORDER BY a.date_and_time ASC LIMIT 3
 ");
 $stmt->execute([$patient_id]);
@@ -47,9 +47,14 @@ $prescriptions = $stmt->fetchAll();
 include '../templates/header.php';
 ?>
 
-<div class="px-4 sm:px-0 mb-6">
-    <h1 class="text-3xl font-bold text-gray-900">Hello, <?= htmlspecialchars($patient['full_name']) ?></h1>
-    <p class="text-gray-600">Blood Type: <span class="font-bold text-red-600"><?= $patient['blood_type'] ?></span></p>
+<div class="px-4 sm:px-0 mb-6 flex justify-between items-center">
+    <div>
+        <h1 class="text-3xl font-bold text-gray-900">Hello, <?= htmlspecialchars($patient['full_name']) ?></h1>
+        <p class="text-gray-600">Blood Type: <span class="font-bold text-red-600"><?= $patient['blood_type'] ?></span></p>
+    </div>
+    <a href="/patient/book_appointment.php" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+        <i class="fas fa-calendar-plus mr-2"></i>Book Appointment
+    </a>
 </div>
 
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -135,11 +140,8 @@ include '../templates/header.php';
                     </div>
                     <p class="text-sm text-gray-600 mb-1"><strong>Dosage:</strong> <?= htmlspecialchars($rx['dosage']) ?></p>
                     <p class="text-xs text-gray-500 mb-3 italic"><?= htmlspecialchars($rx['instructions']) ?></p>
-                    <div class="flex justify-between items-center mt-auto">
+                    <div class="mt-auto">
                         <span class="text-xs text-red-500">Valid: <?= formatDate($rx['valid_until']) ?></span>
-                        <button class="text-purple-600 hover:text-purple-800 text-xs font-bold uppercase">
-                            <i class="fas fa-download mr-1"></i> PDF
-                        </button>
                     </div>
                 </div>
                 <?php endforeach; ?>

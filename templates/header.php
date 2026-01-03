@@ -34,6 +34,7 @@ if (session_status() === PHP_SESSION_NONE) {
                         <?php elseif ($_SESSION['role'] == 'PATIENT'): ?>
                             <a href="/patient/dashboard.php" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Dashboard</a>
                             <a href="/patient/appointments.php" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">My Care</a>
+                            <a href="/patient/book_appointment.php" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Book Appointment</a>
                         <?php endif; ?>
                     </div>
                 </div>

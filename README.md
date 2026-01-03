@@ -5,18 +5,21 @@ A comprehensive PHP-based healthcare management system with MySQL backend, imple
 ## Features
 
 ### For Hospital Admins
+
 - Manage departments, labs, and doctors
 - Update pharmacy stock
 - View hospital statistics and appointment analytics
 - Add new doctors with login credentials
 
 ### For Doctors
+
 - View and manage appointments
 - Create prescriptions with multiple medicines
 - Order lab tests for patients
 - Update diagnosis and appointment status
 
 ### For Patients
+
 - Register and create account
 - View medical profile with blood type and emergency contacts
 - View appointment history
@@ -36,6 +39,38 @@ A comprehensive PHP-based healthcare management system with MySQL backend, imple
 - PHP 7.4+ (or PHP 8)
 - MySQL/MariaDB server (8.0+)
 - Web server (Apache/Nginx) or PHP built-in server
+
+## Windows Installation (Quick Start)
+
+If you're on Windows and don't have PHP installed, here are the easiest options:
+
+### Option 1: XAMPP (Recommended - Includes PHP, MySQL, and Apache)
+
+1. Download XAMPP from [https://www.apachefriends.org/](https://www.apachefriends.org/)
+2. Install XAMPP (default location: `C:\xampp`)
+3. Start XAMPP Control Panel and start **Apache** and **MySQL** services
+4. Add PHP to your PATH:
+   - Open System Properties → Environment Variables
+   - Edit the `Path` variable under User variables
+   - Add: `C:\xampp\php` (or your XAMPP installation path)
+   - Restart PowerShell/terminal
+5. Verify installation: `php -v`
+
+### Option 2: Install PHP Directly
+
+1. Download PHP from [https://windows.php.net/download/](https://windows.php.net/download/)
+   - Choose "Thread Safe" version (ZIP file)
+2. Extract to `C:\php` (or your preferred location)
+3. Add PHP to your PATH (same steps as Option 1)
+4. Install MySQL separately from [https://dev.mysql.com/downloads/installer/](https://dev.mysql.com/downloads/installer/)
+
+### Option 3: Using Chocolatey (If you have Chocolatey installed)
+
+```powershell
+choco install php mysql
+```
+
+After installation, restart your terminal and verify with: `php -v`
 
 ## Installation
 
@@ -100,14 +135,17 @@ After running `seed_data.php`, you can login with:
 ## User Roles
 
 ### Hospital Admin (ADMIN)
+
 - Manage hospital resources (departments, labs, doctors, pharmacy stock)
 - Can only access their assigned hospital's data
 
 ### Doctor (DOCTOR)
+
 - View appointments, create prescriptions, order lab tests
 - Can only see their own appointments and patients
 
 ### Patient (PATIENT)
+
 - View profile, appointments, prescriptions, and bills
 - Read-only access to their own medical data
 
@@ -180,14 +218,17 @@ The system implements 22+ entities including:
 ## Troubleshooting
 
 ### MySQL Connection Error
+
 - Ensure MySQL server is running
 - Check database credentials in `config.php`
 - Verify database exists: `SHOW DATABASES;`
 
 ### Port Already in Use
+
 - Change port: `php -S localhost:8001`
 
 ### Database Tables Not Found
+
 - Run `php setup_db.php` to create tables
 - Ensure database exists and is accessible
 
