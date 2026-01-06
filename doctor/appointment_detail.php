@@ -54,6 +54,16 @@ foreach ($prescriptions as &$presc) {
     $presc['items'] = $stmt->fetchAll();
 }
 
+$sql = "SELECT lt.*, l.lab_name, l.location as lab_location
+        FROM core_labtest lt
+        LEFT JOIN core_lab l ON lt.lab_id = l.lab_id
+        WHERE lt.patient_id = ? AND lt.ordered_by_id = ? 
+        AND (lt.appointment_id = ? OR lt.appointment_id IS NULL)
+        ORDER BY lt.date_and_time DESC";
+$stmt = $pdo->prepare($sql);
+$stmt->execute([$appointment['patient_id'], $doctor_id, $appointment_id]);
+$lab_tests = $stmt->fetchAll();
+
 include __DIR__ . '/../templates/header.php';
 ?>
 
@@ -117,21 +127,36 @@ include __DIR__ . '/../templates/header.php';
                     </div>
                     
                     <button type="submit" class="btn btn-primary">Update Appointment</button>
+                    <?php if ($appointment['status'] == 'Completed'): ?>
+                        <a href="/doctor/generate_bill.php?appointment_id=<?= $appointment_id ?>" class="btn btn-success ml-2">
+                            <i class="fas fa-file-invoice-dollar mr-2"></i>Generate Bill
+                        </a>
+                    <?php endif; ?>
                 </form>
             </div>
         </div>
         
-        <div class="card">
+        <div class="card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h3>Prescriptions</h3>
-                <a href="/doctor/prescription_form.php?appointment_id=<?= $appointment_id ?>" class="btn btn-success btn-sm">Add Prescription</a>
+                <div>
+                    <a href="/doctor/lab_test_order.php?appointment_id=<?= $appointment_id ?>" class="btn btn-info btn-sm mr-2">
+                        <i class="fas fa-vial mr-1"></i>Order Lab Test
+                    </a>
+                    <a href="/doctor/prescription_form.php?appointment_id=<?= $appointment_id ?>" class="btn btn-success btn-sm">Add Prescription</a>
+                </div>
             </div>
             <div class="card-body">
                 <?php foreach ($prescriptions as $presc): ?>
                     <div class="prescription-block mb-3 border p-3">
                         <div class="d-flex justify-content-between">
                             <strong>Valid Until: <?= $presc['valid_until'] ?></strong>
-                            <a href="/doctor/add_prescription_items.php?prescription_id=<?= $presc['prescription_id'] ?>" class="btn btn-sm btn-outline-primary">Add Items</a>
+                            <div>
+                                <a href="/patient/prescription_pdf.php?id=<?= $presc['prescription_id'] ?>" class="btn btn-sm btn-success mr-2" target="_blank">
+                                    <i class="fas fa-file-pdf mr-1"></i>PDF
+                                </a>
+                                <a href="/doctor/add_prescription_items.php?prescription_id=<?= $presc['prescription_id'] ?>" class="btn btn-sm btn-outline-primary">Add Items</a>
+                            </div>
                         </div>
                         <p class="mb-2"><em>Notes: <?= htmlspecialchars($presc['notes']) ?></em></p>
                         
@@ -159,6 +184,69 @@ include __DIR__ . '/../templates/header.php';
                 <?php endforeach; ?>
                 <?php if (empty($prescriptions)): ?>
                     <p class="text-muted text-center">No prescriptions yet.</p>
+                <?php endif; ?>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3><i class="fas fa-vial mr-2"></i>Lab Tests</h3>
+                <a href="/doctor/lab_test_order.php?appointment_id=<?= $appointment_id ?>" class="btn btn-success btn-sm">
+                    <i class="fas fa-plus mr-2"></i>Order Lab Test
+                </a>
+            </div>
+            <div class="card-body">
+                <?php if (!empty($lab_tests)): ?>
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Test Type</th>
+                                <th>Lab</th>
+                                <th>Ordered Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($lab_tests as $lt): ?>
+                            <tr>
+                                <td><strong><?= htmlspecialchars($lt['test_type']) ?></strong></td>
+                                <td>
+                                    <?php if ($lt['lab_name']): ?>
+                                        <?= htmlspecialchars($lt['lab_name']) ?><br>
+                                        <small class="text-muted"><?= htmlspecialchars($lt['lab_location']) ?></small>
+                                    <?php else: ?>
+                                        <span class="text-muted">To be assigned</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td><?= date('M d, Y H:i', strtotime($lt['date_and_time'])) ?></td>
+                                <td>
+                                    <?php
+                                    $status_class = [
+                                        'Ordered' => 'badge-warning',
+                                        'In Progress' => 'badge-info',
+                                        'Completed' => 'badge-success',
+                                        'Cancelled' => 'badge-danger'
+                                    ];
+                                    $badge_class = $status_class[$lt['status']] ?? 'badge-primary';
+                                    ?>
+                                    <span class="badge <?= $badge_class ?>"><?= htmlspecialchars($lt['status']) ?></span>
+                                </td>
+                                <td>
+                                    <a href="/doctor/lab_test_detail.php?id=<?= $lt['test_id'] ?>" 
+                                       class="btn btn-sm btn-primary" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                <?php else: ?>
+                    <p class="text-muted text-center">
+                        <i class="fas fa-vial text-gray-400 mb-2"></i><br>
+                        No lab tests ordered for this patient yet.
+                    </p>
                 <?php endif; ?>
             </div>
         </div>

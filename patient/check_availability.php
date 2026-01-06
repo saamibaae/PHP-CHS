@@ -12,12 +12,27 @@ if (!$doctor_id || !$date) {
     exit;
 }
 
-// Get all booked times for this doctor on this date
+$doctor_id = filter_var($doctor_id, FILTER_VALIDATE_INT);
+if ($doctor_id === false || $doctor_id <= 0) {
+    echo json_encode(['error' => 'Invalid doctor ID', 'booked_times' => []]);
+    exit;
+}
+
+if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+    echo json_encode(['error' => 'Invalid date format', 'booked_times' => []]);
+    exit;
+}
+
+$date_timestamp = strtotime($date);
+if ($date_timestamp === false || $date_timestamp < strtotime('today')) {
+    echo json_encode(['error' => 'Date cannot be in the past', 'booked_times' => []]);
+    exit;
+}
+
 $stmt = $pdo->prepare("SELECT TIME(date_and_time) as time FROM core_appointment WHERE doctor_id = ? AND DATE(date_and_time) = ? AND status != 'Cancelled'");
 $stmt->execute([$doctor_id, $date]);
 $booked_times = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
-// Format times as HH:MM (without seconds)
 $formatted_times = array_map(function($time) {
     return substr($time, 0, 5); // Get HH:MM from HH:MM:SS
 }, $booked_times);

@@ -5,55 +5,69 @@ requireRole('DOCTOR');
 $presc_id = $_GET['prescription_id'] ?? null;
 if (!$presc_id) die("Invalid request");
 
-$stmt = $pdo->prepare("SELECT p.*, a.appointment_id FROM core_prescription p JOIN core_appointment a ON p.appointment_id = a.appointment_id WHERE p.prescription_id = ?");
-$stmt->execute([$presc_id]);
+$user_id = $_SESSION['user_id'];
+$stmt = $pdo->prepare("SELECT doctor_id FROM core_doctor WHERE user_id = ?");
+$stmt->execute([$user_id]);
+$doctor_id = $stmt->fetchColumn();
+
+if (!$doctor_id) die("Doctor profile not found.");
+
+$stmt = $pdo->prepare("SELECT p.*, a.appointment_id 
+                       FROM core_prescription p 
+                       JOIN core_appointment a ON p.appointment_id = a.appointment_id 
+                       WHERE p.prescription_id = ? AND a.doctor_id = ?");
+$stmt->execute([$presc_id, $doctor_id]);
 $presc = $stmt->fetch();
 
 if (!$presc) {
-    die("Prescription not found.");
+    die("Prescription not found or access denied.");
 }
 
-// Handle Add Item
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $medicine_name = trim($_POST['medicine_name']);
-    $dosage = $_POST['dosage'];
-    $frequency = $_POST['frequency'];
-    $duration = $_POST['duration'];
-    $quantity = $_POST['quantity'];
-    $before_after = $_POST['before_after_meal'];
-    $instructions = $_POST['instructions'];
+    $medicine_name = trim($_POST['medicine_name'] ?? '');
+    $dosage = trim($_POST['dosage'] ?? '');
+    $frequency = trim($_POST['frequency'] ?? '');
+    $duration = trim($_POST['duration'] ?? '');
+    $quantity = intval($_POST['quantity'] ?? 0);
+    $before_after = $_POST['before_after_meal'] ?? 'After';
+    $instructions = trim($_POST['instructions'] ?? '');
     
     if (empty($medicine_name)) {
         setFlash("Medicine name is required.", "error");
         header("Location: /doctor/add_prescription_items.php?prescription_id=" . $presc_id);
         exit;
     }
+    if (empty($dosage) || empty($frequency) || empty($duration)) {
+        setFlash("Dosage, frequency, and duration are required.", "error");
+        header("Location: /doctor/add_prescription_items.php?prescription_id=" . $presc_id);
+        exit;
+    }
+    if ($quantity <= 0) {
+        setFlash("Quantity must be greater than 0.", "error");
+        header("Location: /doctor/add_prescription_items.php?prescription_id=" . $presc_id);
+        exit;
+    }
     
-    // Get or create a default manufacturer
     $stmt = $pdo->query("SELECT manufacturer_id FROM core_manufacturer LIMIT 1");
     $manufacturer_id = $stmt->fetchColumn();
     
     if (!$manufacturer_id) {
-        // Create a default manufacturer if none exists
         $pdo->exec("INSERT INTO core_manufacturer (name, phone, address, license_no) 
                     VALUES ('Generic Manufacturer', '01700000000', 'Dhaka, Bangladesh', 'MANUF-001')");
         $manufacturer_id = $pdo->lastInsertId();
     }
     
-    // Check if medicine exists, if not create it
     $stmt = $pdo->prepare("SELECT medicine_id FROM core_medicine WHERE LOWER(name) = LOWER(?)");
     $stmt->execute([$medicine_name]);
     $medicine_id = $stmt->fetchColumn();
     
     if (!$medicine_id) {
-        // Create medicine automatically
         $stmt = $pdo->prepare("INSERT INTO core_medicine (name, type, dosage_info, manufacturer_id) 
                               VALUES (?, 'General', 'As prescribed', ?)");
         $stmt->execute([$medicine_name, $manufacturer_id]);
         $medicine_id = $pdo->lastInsertId();
     }
     
-    // Add prescription item
     $sql = "INSERT INTO core_prescriptionitem 
             (prescription_id, medicine_id, dosage, frequency, duration, quantity, before_after_meal, instructions)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
@@ -61,12 +75,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->execute([$presc_id, $medicine_id, $dosage, $frequency, $duration, $quantity, $before_after, $instructions]);
     
     setFlash("Medicine added.");
-    // Refresh page to show added item
     header("Location: /doctor/add_prescription_items.php?prescription_id=" . $presc_id);
     exit;
 }
 
-// Get Existing Items
 $sql = "SELECT pi.*, m.name FROM core_prescriptionitem pi JOIN core_medicine m ON pi.medicine_id = m.medicine_id WHERE pi.prescription_id = ?";
 $stmt = $pdo->prepare($sql);
 $stmt->execute([$presc_id]);
@@ -85,7 +97,7 @@ include __DIR__ . '/../templates/header.php';
         <div class="card">
             <div class="card-header">Add Item</div>
             <div class="card-body">
-                <form method="post">
+                <form method="post" action="">
                     <div class="form-group">
                         <label>Medicine Name</label>
                         <input type="text" name="medicine_name" class="form-control" placeholder="e.g. Paracetamol, Amoxicillin, etc." required autofocus>
@@ -110,7 +122,7 @@ include __DIR__ . '/../templates/header.php';
                         </div>
                         <div class="form-group col-md-6">
                             <label>Quantity</label>
-                            <input type="number" name="quantity" class="form-control" required>
+                            <input type="number" name="quantity" class="form-control" required min="1">
                         </div>
                     </div>
                     

@@ -33,7 +33,7 @@ try {
             phone VARCHAR(15) NOT NULL,
             capacity INT NOT NULL,
             registration_no VARCHAR(100) UNIQUE NOT NULL,
-            email VARCHAR(254) NOT NULL,
+            email VARCHAR(254) UNIQUE NOT NULL,
             emergency_services BOOLEAN DEFAULT TRUE,
             established_date DATE NOT NULL,
             website VARCHAR(200),
@@ -61,7 +61,7 @@ try {
             id INT AUTO_INCREMENT PRIMARY KEY,
             username VARCHAR(150) UNIQUE NOT NULL,
             password VARCHAR(255) NOT NULL,
-            email VARCHAR(254),
+            email VARCHAR(254)UNIQUE NOT NULL,
             first_name VARCHAR(150),
             last_name VARCHAR(150),
             is_active BOOLEAN DEFAULT TRUE,
@@ -92,7 +92,7 @@ try {
             full_name VARCHAR(200) NOT NULL,
             specialization VARCHAR(200) NOT NULL,
             phone VARCHAR(15) NOT NULL,
-            email VARCHAR(254) NOT NULL,
+            email VARCHAR(254) UNIQUE NOT NULL,
             experience_yrs INT NOT NULL,
             gender VARCHAR(1) NOT NULL,
             shift_timing VARCHAR(100) NOT NULL,
@@ -179,7 +179,7 @@ try {
             date_of_birth DATE NOT NULL,
             gender VARCHAR(1) NOT NULL,
             phone VARCHAR(15) NOT NULL,
-            email VARCHAR(254) NOT NULL,
+            email VARCHAR(254) UNIQUE NOT NULL,
             address TEXT NOT NULL,
             blood_type VARCHAR(3) NOT NULL,
             occupation VARCHAR(100),
@@ -225,18 +225,22 @@ try {
 
         "CREATE TABLE IF NOT EXISTS core_labtest (
             test_id INT AUTO_INCREMENT PRIMARY KEY,
-            lab_id INT NOT NULL,
+            lab_id INT NULL,
             patient_id INT NOT NULL,
-            test_type VARCHAR(200) NOT NULL,
+            test_type TEXT NOT NULL,
             result TEXT,
             ordered_by_id INT NOT NULL,
             remarks TEXT,
-            test_cost DECIMAL(10, 2) NOT NULL,
+            test_cost DECIMAL(10, 2) DEFAULT 0.00,
             date_and_time DATETIME DEFAULT CURRENT_TIMESTAMP,
             status VARCHAR(20) DEFAULT 'Ordered',
-            FOREIGN KEY (lab_id) REFERENCES core_lab(lab_id),
+            bill_id INT NULL,
+            appointment_id INT NULL,
+            FOREIGN KEY (lab_id) REFERENCES core_lab(lab_id) ON DELETE SET NULL,
             FOREIGN KEY (patient_id) REFERENCES core_patient(patient_id) ON DELETE CASCADE,
-            FOREIGN KEY (ordered_by_id) REFERENCES core_doctor(doctor_id)
+            FOREIGN KEY (ordered_by_id) REFERENCES core_doctor(doctor_id),
+            FOREIGN KEY (bill_id) REFERENCES core_bill(bill_id) ON DELETE SET NULL,
+            FOREIGN KEY (appointment_id) REFERENCES core_appointment(appointment_id) ON DELETE SET NULL
         )",
 
         "CREATE TABLE IF NOT EXISTS core_prescription (
@@ -287,6 +291,38 @@ try {
             FOREIGN KEY (pharmacy_id) REFERENCES core_pharmacy(pharmacy_id),
             FOREIGN KEY (bill_id) REFERENCES core_bill(bill_id) ON DELETE CASCADE,
             FOREIGN KEY (prescription_id) REFERENCES core_prescription(prescription_id)
+        )",
+
+        "CREATE TABLE IF NOT EXISTS core_admission (
+            admission_id INT AUTO_INCREMENT PRIMARY KEY,
+            patient_id INT NOT NULL,
+            hospital_id INT NOT NULL,
+            bed_number VARCHAR(50) NOT NULL,
+            admission_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+            discharge_date DATETIME NULL,
+            reason TEXT,
+            status VARCHAR(20) DEFAULT 'Admitted',
+            admitted_by_user_id INT,
+            discharged_by_user_id INT NULL,
+            FOREIGN KEY (patient_id) REFERENCES core_patient(patient_id) ON DELETE CASCADE,
+            FOREIGN KEY (hospital_id) REFERENCES core_hospital(hospital_id) ON DELETE CASCADE,
+            FOREIGN KEY (admitted_by_user_id) REFERENCES core_customuser(id),
+            FOREIGN KEY (discharged_by_user_id) REFERENCES core_customuser(id),
+            INDEX idx_hospital_bed_status (hospital_id, bed_number, status)
+        )",
+
+        "CREATE TABLE IF NOT EXISTS core_doctorrating (
+            rating_id INT AUTO_INCREMENT PRIMARY KEY,
+            doctor_id INT NOT NULL,
+            patient_id INT NOT NULL,
+            appointment_id INT,
+            rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
+            comment TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (doctor_id) REFERENCES core_doctor(doctor_id) ON DELETE CASCADE,
+            FOREIGN KEY (patient_id) REFERENCES core_patient(patient_id) ON DELETE CASCADE,
+            FOREIGN KEY (appointment_id) REFERENCES core_appointment(appointment_id) ON DELETE SET NULL,
+            UNIQUE(patient_id, appointment_id)
         )"
     ];
 
@@ -294,6 +330,102 @@ try {
         $pdo->exec($sql);
     }
     echo "All tables created successfully.\n";
+
+    echo "Running migrations...\n";
+    
+    try {
+        $stmt = $pdo->query("SHOW COLUMNS FROM core_labtest LIKE 'bill_id'");
+        if ($stmt->rowCount() == 0) {
+            echo "Adding bill_id column to core_labtest table...\n";
+            $pdo->exec("ALTER TABLE core_labtest ADD COLUMN bill_id INT NULL AFTER status");
+            $fk_check = $pdo->query("SELECT CONSTRAINT_NAME FROM information_schema.KEY_COLUMN_USAGE 
+                                     WHERE TABLE_SCHEMA = DATABASE() 
+                                     AND TABLE_NAME = 'core_labtest' 
+                                     AND COLUMN_NAME = 'bill_id' 
+                                     AND REFERENCED_TABLE_NAME = 'core_bill'");
+            if ($fk_check->rowCount() == 0) {
+                try {
+                    $pdo->exec("ALTER TABLE core_labtest ADD CONSTRAINT fk_labtest_bill FOREIGN KEY (bill_id) REFERENCES core_bill(bill_id) ON DELETE SET NULL");
+                } catch (PDOException $e) {
+                    echo "Note: " . $e->getMessage() . "\n";
+                }
+            }
+        }
+    } catch (PDOException $e) {
+        echo "Note: " . $e->getMessage() . "\n";
+    }
+    
+    try {
+        $stmt = $pdo->query("SHOW COLUMNS FROM core_labtest LIKE 'appointment_id'");
+        if ($stmt->rowCount() == 0) {
+            echo "Adding appointment_id column to core_labtest table...\n";
+            $pdo->exec("ALTER TABLE core_labtest ADD COLUMN appointment_id INT NULL AFTER bill_id");
+            $fk_check = $pdo->query("SELECT CONSTRAINT_NAME FROM information_schema.KEY_COLUMN_USAGE 
+                                     WHERE TABLE_SCHEMA = DATABASE() 
+                                     AND TABLE_NAME = 'core_labtest' 
+                                     AND COLUMN_NAME = 'appointment_id' 
+                                     AND REFERENCED_TABLE_NAME = 'core_appointment'");
+            if ($fk_check->rowCount() == 0) {
+                try {
+                    $pdo->exec("ALTER TABLE core_labtest ADD CONSTRAINT fk_labtest_appointment FOREIGN KEY (appointment_id) REFERENCES core_appointment(appointment_id) ON DELETE SET NULL");
+                } catch (PDOException $e) {
+                    echo "Note: " . $e->getMessage() . "\n";
+                }
+            }
+        }
+    } catch (PDOException $e) {
+        echo "Note: " . $e->getMessage() . "\n";
+    }
+    
+    try {
+        $stmt = $pdo->query("SHOW TABLES LIKE 'core_doctorrating'");
+        if ($stmt->rowCount() == 0) {
+            echo "Creating core_doctorrating table...\n";
+            $pdo->exec("CREATE TABLE IF NOT EXISTS core_doctorrating (
+                rating_id INT AUTO_INCREMENT PRIMARY KEY,
+                doctor_id INT NOT NULL,
+                patient_id INT NOT NULL,
+                appointment_id INT,
+                rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
+                comment TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (doctor_id) REFERENCES core_doctor(doctor_id) ON DELETE CASCADE,
+                FOREIGN KEY (patient_id) REFERENCES core_patient(patient_id) ON DELETE CASCADE,
+                FOREIGN KEY (appointment_id) REFERENCES core_appointment(appointment_id) ON DELETE SET NULL,
+                UNIQUE(patient_id, appointment_id)
+            )");
+        }
+    } catch (PDOException $e) {
+        echo "Note: " . $e->getMessage() . "\n";
+    }
+    
+    try {
+        $stmt = $pdo->query("SHOW TABLES LIKE 'core_admission'");
+        if ($stmt->rowCount() == 0) {
+            echo "Creating core_admission table...\n";
+            $pdo->exec("CREATE TABLE IF NOT EXISTS core_admission (
+                admission_id INT AUTO_INCREMENT PRIMARY KEY,
+                patient_id INT NOT NULL,
+                hospital_id INT NOT NULL,
+                bed_number VARCHAR(50) NOT NULL,
+                admission_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+                discharge_date DATETIME NULL,
+                reason TEXT,
+                status VARCHAR(20) DEFAULT 'Admitted',
+                admitted_by_user_id INT,
+                discharged_by_user_id INT NULL,
+                FOREIGN KEY (patient_id) REFERENCES core_patient(patient_id) ON DELETE CASCADE,
+                FOREIGN KEY (hospital_id) REFERENCES core_hospital(hospital_id) ON DELETE CASCADE,
+                FOREIGN KEY (admitted_by_user_id) REFERENCES core_customuser(id),
+                FOREIGN KEY (discharged_by_user_id) REFERENCES core_customuser(id),
+                INDEX idx_hospital_bed_status (hospital_id, bed_number, status)
+            )");
+        }
+    } catch (PDOException $e) {
+        echo "Note: " . $e->getMessage() . "\n";
+    }
+    
+    echo "Migrations completed.\n";
 
     $stmt = $pdo->query("SELECT COUNT(*) FROM core_district");
     if ($stmt->fetchColumn() == 0) {

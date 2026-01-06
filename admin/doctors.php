@@ -31,6 +31,7 @@ include __DIR__ . '/../templates/header.php';
                     <th>Department</th>
                     <th>Phone</th>
                     <th>Shift</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -41,11 +42,18 @@ include __DIR__ . '/../templates/header.php';
                     <td><?= htmlspecialchars($doc['dept_name'] ?? 'N/A') ?></td>
                     <td><?= htmlspecialchars($doc['phone']) ?></td>
                     <td><?= htmlspecialchars($doc['shift_timing']) ?></td>
+                    <td>
+                        <div class="btn-group">
+                            <a href="/admin/doctor_form.php?id=<?= $doc['doctor_id'] ?>" class="btn btn-sm btn-primary" title="Edit">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                        </div>
+                    </td>
                 </tr>
                 <?php endforeach; ?>
                 <?php if (empty($doctors)): ?>
                 <tr>
-                    <td colspan="5" class="text-center">No doctors found.</td>
+                    <td colspan="6" class="text-center">No doctors found.</td>
                 </tr>
                 <?php endif; ?>
             </tbody>

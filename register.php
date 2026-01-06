@@ -9,29 +9,40 @@ if (isLoggedIn()) {
 $error = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Collect data
-    $username = $_POST['username'];
-    $password = $_POST['password'];
-    $confirm_password = $_POST['confirm_password'];
-    $email = $_POST['email'];
-    $full_name = $_POST['full_name'];
-    $national_id = $_POST['national_id'];
-    $dob = $_POST['date_of_birth'];
-    $gender = $_POST['gender'];
-    $phone = $_POST['phone'];
-    $address = $_POST['address'];
-    $blood_type = $_POST['blood_type'];
-    $marital_status = $_POST['marital_status'];
-    $birth_place = $_POST['birth_place'];
-    $father_name = $_POST['father_name'];
-    $mother_name = $_POST['mother_name'];
-    $occupation = $_POST['occupation'] ?? null;
+    $username = trim($_POST['username'] ?? '');
+    $password = $_POST['password'] ?? '';
+    $confirm_password = $_POST['confirm_password'] ?? '';
+    $email = trim($_POST['email'] ?? '');
+    $full_name = trim($_POST['full_name'] ?? '');
+    $national_id = trim($_POST['national_id'] ?? '');
+    $dob = $_POST['date_of_birth'] ?? '';
+    $gender = $_POST['gender'] ?? '';
+    $phone = trim($_POST['phone'] ?? '');
+    $address = trim($_POST['address'] ?? '');
+    $blood_type = $_POST['blood_type'] ?? '';
+    $marital_status = $_POST['marital_status'] ?? '';
+    $birth_place = trim($_POST['birth_place'] ?? '');
+    $father_name = trim($_POST['father_name'] ?? '');
+    $mother_name = trim($_POST['mother_name'] ?? '');
+    $occupation = trim($_POST['occupation'] ?? '') ?: null;
+    
+    $emergency_contact_name = trim($_POST['emergency_contact_name'] ?? '');
+    $emergency_contact_phone = trim($_POST['emergency_contact_phone'] ?? '');
+    $emergency_relationship = trim($_POST['emergency_relationship'] ?? '');
 
-    // Validation
-    if ($password !== $confirm_password) {
+    if (empty($username) || empty($password) || empty($email) || empty($full_name) || empty($national_id) || empty($dob) || empty($gender) || empty($phone) || empty($address) || empty($blood_type) || empty($marital_status) || empty($birth_place) || empty($father_name) || empty($mother_name)) {
+        $error = "All required fields must be filled.";
+    } elseif (strlen($password) < 8) {
+        $error = "Password must be at least 8 characters long.";
+    } elseif (!preg_match('/[A-Za-z]/', $password) || !preg_match('/[0-9]/', $password)) {
+        $error = "Password must contain at least one letter and one number.";
+    } elseif ($password !== $confirm_password) {
         $error = "Passwords do not match.";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error = "Invalid email format.";
+    } elseif (empty($emergency_contact_name) || empty($emergency_contact_phone) || empty($emergency_relationship)) {
+        $error = "Emergency contact information is required.";
     } else {
-        // Check duplicates
         $stmt = $pdo->prepare("SELECT id FROM core_customuser WHERE username = ?");
         $stmt->execute([$username]);
         if ($stmt->fetch()) {
@@ -49,8 +60,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $pdo->beginTransaction();
 
-            // Insert User
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+            if ($hashed_password === false) {
+                throw new Exception("Password hashing failed. Please try again.");
+            }
             $name_parts = explode(' ', $full_name, 2);
             $first_name = $name_parts[0];
             $last_name = $name_parts[1] ?? '';
@@ -65,7 +78,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$username, $hashed_password, $email, $first_name, $last_name, $now]);
             $user_id = $pdo->lastInsertId();
 
-            // Insert Patient
             $sql_patient = "INSERT INTO core_patient 
                             (national_id, full_name, date_of_birth, gender, phone, email, address,
                              blood_type, occupation, marital_status, birth_place, father_name, mother_name, user_id)
@@ -76,6 +88,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $national_id, $full_name, $dob, $gender, $phone, $email, $address,
                 $blood_type, $occupation, $marital_status, $birth_place, $father_name, $mother_name, $user_id
             ]);
+            
+            $patient_id = $pdo->lastInsertId();
+
+            $sql_emergency = "INSERT INTO core_patientemergencycontact 
+                            (patient_id, contact_name, contact_phone, relationship, is_primary)
+                            VALUES (?, ?, ?, ?, 1)";
+            $stmt = $pdo->prepare($sql_emergency);
+            $stmt->execute([$patient_id, $emergency_contact_name, $emergency_contact_phone, $emergency_relationship]);
 
             $pdo->commit();
             setFlash("Registration successful! Please log in.");
@@ -108,7 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="alert alert-error"><?= htmlspecialchars($error) ?></div>
                 <?php endif; ?>
 
-                <form method="post">
+                <form method="post" action="">
                     <div class="form-row">
                         <div class="form-group col-md-6">
                             <label>Username</label>
@@ -211,6 +231,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="form-group col-md-4">
                             <label>Mother's Name</label>
                             <input type="text" name="mother_name" class="form-control" required value="<?= htmlspecialchars($_POST['mother_name'] ?? '') ?>">
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h4>Emergency Contact Information</h4>
+                    <p class="text-muted small mb-3">Please provide at least one emergency contact person who can be reached in case of an emergency.</p>
+
+                    <div class="form-row">
+                        <div class="form-group col-md-4">
+                            <label>Contact Name <span class="text-danger">*</span></label>
+                            <input type="text" name="emergency_contact_name" class="form-control" required value="<?= htmlspecialchars($_POST['emergency_contact_name'] ?? '') ?>" placeholder="Full Name">
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label>Contact Phone <span class="text-danger">*</span></label>
+                            <input type="text" name="emergency_contact_phone" class="form-control" required value="<?= htmlspecialchars($_POST['emergency_contact_phone'] ?? '') ?>" placeholder="01XXXXXXXXX">
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label>Relationship <span class="text-danger">*</span></label>
+                            <select name="emergency_relationship" class="form-control" required>
+                                <option value="">Select Relationship</option>
+                                <option value="Spouse" <?= (($_POST['emergency_relationship'] ?? '') === 'Spouse') ? 'selected' : '' ?>>Spouse</option>
+                                <option value="Parent" <?= (($_POST['emergency_relationship'] ?? '') === 'Parent') ? 'selected' : '' ?>>Parent</option>
+                                <option value="Sibling" <?= (($_POST['emergency_relationship'] ?? '') === 'Sibling') ? 'selected' : '' ?>>Sibling</option>
+                                <option value="Child" <?= (($_POST['emergency_relationship'] ?? '') === 'Child') ? 'selected' : '' ?>>Child</option>
+                                <option value="Friend" <?= (($_POST['emergency_relationship'] ?? '') === 'Friend') ? 'selected' : '' ?>>Friend</option>
+                                <option value="Relative" <?= (($_POST['emergency_relationship'] ?? '') === 'Relative') ? 'selected' : '' ?>>Relative</option>
+                                <option value="Other" <?= (($_POST['emergency_relationship'] ?? '') === 'Other') ? 'selected' : '' ?>>Other</option>
+                            </select>
                         </div>
                     </div>
 

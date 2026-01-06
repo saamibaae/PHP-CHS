@@ -19,51 +19,102 @@ $contacts = $stmt->fetchAll();
 include __DIR__ . '/../templates/header.php';
 ?>
 
-<div class="page-header">
-    <h2>My Profile</h2>
+<div class="px-4 sm:px-0 mb-6 flex justify-between items-center">
+    <h1 class="text-3xl font-bold text-gray-900">My Profile</h1>
+    <a href="/patient/edit_profile.php" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+        <i class="fas fa-edit mr-2"></i>Edit Profile
+    </a>
 </div>
 
-<div class="row">
-    <div class="col-md-8">
-        <div class="card mb-4">
-            <div class="card-header">Personal Information</div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <p><strong>Full Name:</strong> <?= htmlspecialchars($patient['full_name']) ?></p>
-                        <p><strong>National ID:</strong> <?= htmlspecialchars($patient['national_id']) ?></p>
-                        <p><strong>Date of Birth:</strong> <?= htmlspecialchars($patient['date_of_birth']) ?></p>
-                        <p><strong>Gender:</strong> <?= htmlspecialchars($patient['gender']) ?></p>
-                        <p><strong>Blood Type:</strong> <?= htmlspecialchars($patient['blood_type']) ?></p>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2">
+        <div class="bg-white shadow rounded-lg overflow-hidden border-t-4 border-blue-500">
+            <div class="px-6 py-4 bg-white border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">
+                    <i class="fas fa-user text-blue-500 mr-2"></i> Personal Information
+                </h3>
+            </div>
+            <div class="px-6 py-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Full Name</p>
+                            <p class="text-base text-gray-900"><?= htmlspecialchars($patient['full_name']) ?></p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">National ID</p>
+                            <p class="text-base text-gray-900"><?= htmlspecialchars($patient['national_id']) ?></p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Date of Birth</p>
+                            <p class="text-base text-gray-900"><?= htmlspecialchars($patient['date_of_birth']) ?></p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Gender</p>
+                            <p class="text-base text-gray-900"><?= htmlspecialchars($patient['gender']) ?></p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Blood Type</p>
+                            <p class="text-base font-bold text-red-600"><?= htmlspecialchars($patient['blood_type']) ?></p>
+                        </div>
                     </div>
-                    <div class="col-md-6">
-                        <p><strong>Phone:</strong> <?= htmlspecialchars($patient['phone']) ?></p>
-                        <p><strong>Email:</strong> <?= htmlspecialchars($patient['email']) ?></p>
-                        <p><strong>Address:</strong><br><?= nl2br(htmlspecialchars($patient['address'])) ?></p>
-                        <p><strong>Occupation:</strong> <?= htmlspecialchars($patient['occupation']) ?></p>
-                        <p><strong>Marital Status:</strong> <?= htmlspecialchars($patient['marital_status']) ?></p>
+                    <div class="space-y-4">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Phone</p>
+                            <p class="text-base text-gray-900"><?= htmlspecialchars($patient['phone']) ?></p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Email</p>
+                            <p class="text-base text-gray-900"><?= htmlspecialchars($patient['email']) ?></p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Address</p>
+                            <p class="text-base text-gray-900"><?= nl2br(htmlspecialchars($patient['address'])) ?></p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Occupation</p>
+                            <p class="text-base text-gray-900"><?= htmlspecialchars($patient['occupation'] ?? 'N/A') ?></p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Marital Status</p>
+                            <p class="text-base text-gray-900"><?= htmlspecialchars($patient['marital_status']) ?></p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
     
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-header">Emergency Contacts</div>
-            <div class="card-body">
-                <ul class="list-group">
-                    <?php foreach ($contacts as $c): ?>
-                    <li class="list-group-item">
-                        <strong><?= htmlspecialchars($c['contact_name']) ?></strong>
-                        <?php if ($c['is_primary']): ?> <span class="badge badge-primary">Primary</span><?php endif; ?>
-                        <br>
-                        <?= htmlspecialchars($c['contact_phone']) ?>
-                        <br>
-                        <small class="text-muted"><?= htmlspecialchars($c['relationship']) ?></small>
-                    </li>
-                    <?php endforeach; ?>
-                </ul>
+    <div class="lg:col-span-1">
+        <div class="bg-white shadow rounded-lg overflow-hidden border-t-4 border-green-500">
+            <div class="px-6 py-4 bg-white border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">
+                    <i class="fas fa-phone-alt text-green-500 mr-2"></i> Emergency Contacts
+                </h3>
+            </div>
+            <div class="px-6 py-4">
+                <?php if (empty($contacts)): ?>
+                    <p class="text-sm text-gray-500 text-center py-4">No emergency contacts on file.</p>
+                <?php else: ?>
+                    <ul class="divide-y divide-gray-200">
+                        <?php foreach ($contacts as $c): ?>
+                        <li class="py-4">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <p class="text-sm font-bold text-gray-900"><?= htmlspecialchars($c['contact_name']) ?></p>
+                                    <p class="text-sm text-gray-600 mt-1"><?= htmlspecialchars($c['contact_phone']) ?></p>
+                                    <p class="text-xs text-gray-500 mt-1"><?= htmlspecialchars($c['relationship']) ?></p>
+                                </div>
+                                <?php if ($c['is_primary']): ?>
+                                    <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                        Primary
+                                    </span>
+                                <?php endif; ?>
+                            </div>
+                        </li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php endif; ?>
             </div>
         </div>
     </div>

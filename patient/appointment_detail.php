@@ -15,7 +15,6 @@ if (!$patient_id) {
     die("Patient record not found. Please contact administrator.");
 }
 
-// Get Appointment
 $sql = "SELECT a.*, d.full_name as doctor_name, d.specialization, 
                dept.dept_name, h.name as hospital_name
         FROM core_appointment a
@@ -29,13 +28,11 @@ $appointment = $stmt->fetch();
 
 if (!$appointment) die("Appointment not found.");
 
-// Get Prescriptions
 $sql = "SELECT * FROM core_prescription WHERE appointment_id = ?";
 $stmt = $pdo->prepare($sql);
 $stmt->execute([$appointment_id]);
 $prescriptions = $stmt->fetchAll();
 
-// Get Items for Prescriptions
 foreach ($prescriptions as &$presc) {
     $sql = "SELECT pi.*, m.name as medicine_name 
             FROM core_prescriptionitem pi
@@ -90,6 +87,32 @@ include __DIR__ . '/../templates/header.php';
                 <?php if ($appointment['follow_up_date']): ?>
                     <p class="mt-2"><strong>Follow-up Required:</strong> <?= $appointment['follow_up_date'] ?></p>
                 <?php endif; ?>
+                
+                <?php if ($appointment['status'] == 'Completed'): ?>
+                    <?php
+                    $stmt = $pdo->prepare("SELECT * FROM core_doctorrating WHERE appointment_id = ? AND patient_id = ?");
+                    $stmt->execute([$appointment_id, $patient_id]);
+                    $rating = $stmt->fetch();
+                    ?>
+                    <div class="mt-3 pt-3 border-t">
+                        <?php if ($rating): ?>
+                            <p class="text-sm text-gray-600 mb-2">
+                                <strong>Your Rating:</strong> 
+                                <?php for ($i = 1; $i <= 5; $i++): ?>
+                                    <i class="fas fa-star <?= $i <= $rating['rating'] ? 'text-yellow-400' : 'text-gray-300' ?>"></i>
+                                <?php endfor; ?>
+                                (<?= $rating['rating'] ?>/5)
+                            </p>
+                            <a href="/patient/rate_doctor.php?appointment_id=<?= $appointment_id ?>" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-edit mr-1"></i>Update Rating
+                            </a>
+                        <?php else: ?>
+                            <a href="/patient/rate_doctor.php?appointment_id=<?= $appointment_id ?>" class="btn btn-sm btn-success">
+                                <i class="fas fa-star mr-1"></i>Rate This Doctor
+                            </a>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -102,9 +125,15 @@ include __DIR__ . '/../templates/header.php';
             <div class="card-body">
                 <?php foreach ($prescriptions as $presc): ?>
                     <div class="prescription-block mb-3 border p-3">
-                        <div class="d-flex justify-content-between">
-                            <strong>Rx #<?= $presc['prescription_id'] ?></strong>
-                            <span>Valid Until: <?= $presc['valid_until'] ?></span>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <strong>Rx #<?= $presc['prescription_id'] ?></strong>
+                                <span class="ml-3 text-muted">Valid Until: <?= $presc['valid_until'] ?></span>
+                            </div>
+                            <a href="/patient/prescription_pdf.php?id=<?= $presc['prescription_id'] ?>" 
+                               class="btn btn-sm btn-success" target="_blank">
+                                <i class="fas fa-file-pdf mr-1"></i>Download PDF
+                            </a>
                         </div>
                         
                         <table class="table table-sm mt-2">

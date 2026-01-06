@@ -20,7 +20,6 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute([$patient_id]);
 $bills = $stmt->fetchAll();
 
-// Pharmacy Bills
 $sql = "SELECT pb.*, b.*, p.name as pharmacy_name
         FROM core_pharmacybill pb
         INNER JOIN core_bill b ON pb.bill_id = b.bill_id

@@ -1,241 +1,115 @@
 # Healthcare Management System
 
-A comprehensive PHP-based healthcare management system with MySQL backend, implementing role-based access control for Hospital Admins, Doctors, and Patients.
+A robust and efficient web-based solution designed to streamline hospital operations, built with **PHP** and **MySQL**. This system bridges the gap between administrators, doctors, and patients, offering a seamless experience for managing medical workflows.
 
-## Features
+## 🚀 Overview
 
-### For Hospital Admins
+This application serves as a comprehensive digital backbone for hospitals, enabling:
 
-- Manage departments, labs, and doctors
-- Update pharmacy stock
-- View hospital statistics and appointment analytics
-- Add new doctors with login credentials
+- **Administrators** to manage resources, staff, and pharmacy stocks.
+- **Doctors** to handle appointments, prescriptions, and lab tests digitally.
+- **Patients** to book appointments, access medical records, and view bills.
 
-### For Doctors
+## ✨ Key Features
 
-- View and manage appointments
-- Create prescriptions with multiple medicines
-- Order lab tests for patients
-- Update diagnosis and appointment status
+### 🏥 For Hospital Administrators
 
-### For Patients
+- **Resource Management**: Complete control over departments, labs, and pharmacy inventories.
+- **Staff Administration**: Onboard and manage doctors with specialized roles.
+- **Operational Oversight**: Track hospital admissions, discharges, and bed occupancy.
+- **Pharmacy Control**: Monitor stock levels and manage medicine inventory.
 
-- Register and create account
-- View medical profile with blood type and emergency contacts
-- View appointment history
-- Access prescriptions
-- View and track bills
+### 👨‍⚕️ For Doctors
 
-## Technology Stack
+- **Digital Workbench**: View daily schedules and manage patient appointments.
+- **e-Prescriptions**: Generate professional prescriptions with multiple medicines and instructions.
+- **Lab Integration**: Order lab tests and view results directly within the patient's file.
+- **Clinical Notes**: Maintain diagnosis records and treatment history.
 
-- **Backend**: PHP 7.4+
-- **Database**: MySQL/MariaDB
-- **Frontend**: HTML, CSS (Tailwind), JavaScript
-- **Authentication**: Session-based with role-based access control
-- **Password Hashing**: PHP password_hash (with Werkzeug PBKDF2 support)
+### 👤 For Patients
 
-## Prerequisites
+- **Self-Service Portal**: Register and book appointments online.
+- **Medical History**: Access past prescriptions, lab reports, and doctor notes.
+- **Billing Transparency**: View bill status and transaction history.
+- **Profile Management**: Update personal and emergency contact information.
 
-- PHP 7.4+ (or PHP 8)
-- MySQL/MariaDB server (8.0+)
-- Web server (Apache/Nginx) or PHP built-in server
+## 🛠️ Technology Stack
 
-## Windows Installation (Quick Start)
+- **Backend**: PHP 7.4+ (Native)
+- **Database**: MySQL / MariaDB
+- **Frontend**: HTML5, Tailwind CSS, JavaScript
+- **Security**:
+  - Role-Based Access Control (RBAC)
+  - PDO Prepared Statements (SQL Injection Protection)
+  - Secure Password Hashing (Bcrypt/PBKDF2)
+  - Session Management
 
-If you're on Windows and don't have PHP installed, here are the easiest options:
+## ⚙️ Installation & Setup
 
-### Option 1: XAMPP (Recommended - Includes PHP, MySQL, and Apache)
+### Prerequisites
 
-1. Download XAMPP from [https://www.apachefriends.org/](https://www.apachefriends.org/)
-2. Install XAMPP (default location: `C:\xampp`)
-3. Start XAMPP Control Panel and start **Apache** and **MySQL** services
-4. Add PHP to your PATH:
-   - Open System Properties → Environment Variables
-   - Edit the `Path` variable under User variables
-   - Add: `C:\xampp\php` (or your XAMPP installation path)
-   - Restart PowerShell/terminal
-5. Verify installation: `php -v`
+- PHP 7.4 or higher
+- MySQL 8.0 or higher
+- A web server (Apache, Nginx, or PHP built-in server)
 
-### Option 2: Install PHP Directly
+### Quick Start (Windows)
 
-1. Download PHP from [https://windows.php.net/download/](https://windows.php.net/download/)
-   - Choose "Thread Safe" version (ZIP file)
-2. Extract to `C:\php` (or your preferred location)
-3. Add PHP to your PATH (same steps as Option 1)
-4. Install MySQL separately from [https://dev.mysql.com/downloads/installer/](https://dev.mysql.com/downloads/installer/)
+1.  **Clone the Repository**
 
-### Option 3: Using Chocolatey (If you have Chocolatey installed)
+    ```bash
+    git clone <repository-url>
+    cd healthcare-management-system
+    ```
 
-```powershell
-choco install php mysql
-```
+2.  **Configure Database**
+    Open `config.php` and verify your database credentials:
 
-After installation, restart your terminal and verify with: `php -v`
+    ```php
+    define('DB_HOST', 'localhost');
+    define('DB_NAME', 'healthcare_db');
+    define('DB_USER', 'root'); // Your MySQL username
+    define('DB_PASS', '');     // Your MySQL password
+    ```
 
-## Installation
+3.  **Initialize Database**
+    Run the setup script to create the schema and tables:
 
-### 1. Clone the Repository
+    ```bash
+    php setup_db.php
+    ```
 
-```bash
-git clone <repository-url>
-cd "GRAND FInale - Copy"
-```
+4.  **Seed Data (Optional)**
+    Populate the system with dummy data for testing:
 
-### 2. Configure Database
+    ```bash
+    php seed_data.php
+    ```
 
-Edit `config.php` and update the database configuration:
+    _This will create default users for Admin, Doctor, and Patient roles._
 
-```php
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'healthcare_db');
-define('DB_USER', 'root');
-define('DB_PASS', '');
-```
+5.  **Run Application**
+    Start the PHP development server:
+    ```bash
+    php -S localhost:8000
+    ```
+    Visit **[http://localhost:8000](http://localhost:8000)** in your browser.
 
-### 3. Setup Database
+## 🔐 Default Credentials
 
-Run the database setup script:
+If you ran `seed_data.php`, use these credentials to log in:
 
-```bash
-php setup_db.php
-```
-
-This will create the database and all necessary tables.
-
-### 4. Seed Initial Data (Optional)
-
-To populate the database with sample data:
-
-```bash
-php seed_data.php
-```
-
-This creates sample hospitals, doctors, and patients. Default password for all users: `password123`
-
-### 5. Run the Application
-
-Using PHP built-in server:
-
-```bash
-php -S localhost:8000
-```
-
-Or configure your web server (Apache/Nginx) to point to the project directory.
-
-Access the application at: **http://localhost:8000**
-
-## Default Login Credentials
-
-After running `seed_data.php`, you can login with:
-
-- **Admin**: username=`admin`, password=`admin123`
-- **Doctor**: username=`dr_rahman`, password=`password123`
-- **Patient**: username=`patient1`, password=`password123`
-
-## User Roles
-
-### Hospital Admin (ADMIN)
-
-- Manage hospital resources (departments, labs, doctors, pharmacy stock)
-- Can only access their assigned hospital's data
-
-### Doctor (DOCTOR)
-
-- View appointments, create prescriptions, order lab tests
-- Can only see their own appointments and patients
-
-### Patient (PATIENT)
-
-- View profile, appointments, prescriptions, and bills
-- Read-only access to their own medical data
-
-## Project Structure
-
-```
-.
-├── config.php              # Database and app configuration
-├── db.php                  # Database connection and helper functions
-├── functions.php           # Shared utility functions
-├── index.php               # Entry point (redirects to login)
-├── login.php               # Login page
-├── register.php            # Patient registration
-├── dashboard.php           # Role-based dashboard router
-├── logout.php              # Logout handler
-├── setup_db.php            # Database initialization script
-├── seed_data.php           # Sample data seeding script
-├── admin/                  # Admin module
-│   ├── dashboard.php
-│   ├── departments.php
-│   ├── department_form.php
-│   ├── doctors.php
-│   ├── doctor_form.php
-│   ├── labs.php
-│   ├── lab_form.php
-│   ├── pharmacy_stock.php
-│   └── stock_form.php
-├── doctor/                 # Doctor module
-│   ├── dashboard.php
-│   ├── appointments.php
-│   ├── appointment_detail.php
-│   ├── prescription_form.php
-│   ├── add_prescription_items.php
-│   └── lab_test_order.php
-├── patient/                # Patient module
-│   ├── dashboard.php
-│   ├── profile.php
-│   ├── appointments.php
-│   ├── appointment_detail.php
-│   └── bills.php
-├── templates/              # Shared templates
-│   ├── header.php
-│   └── footer.php
-└── static/                 # Static assets
-    └── css/
-        └── style.css
-```
-
-## Database Schema
-
-The system implements 22+ entities including:
-
-- **User Management**: CustomUser with role-based access
-- **Hospital**: Multi-table inheritance (Hospital → PublicHospital/PrivateHospital)
-- **Medical Staff**: Doctor, DoctorQualification
-- **Patients**: Patient, PatientEmergencyContact
-- **Clinical**: Appointment, Prescription, PrescriptionItem, LabTest
-- **Pharmacy**: Medicine, Pharmacy, PharmacyMedicine, PharmacyBill
-- **Billing**: Bill
-- **Reference**: District, Qualification, Manufacturer, ServiceType
-
-## Security Features
-
-- Session-based authentication
-- Role-based access control
-- Parameterized SQL queries (SQL injection prevention)
-- Password hashing
-- Hospital data isolation
-
-## Troubleshooting
-
-### MySQL Connection Error
-
-- Ensure MySQL server is running
-- Check database credentials in `config.php`
-- Verify database exists: `SHOW DATABASES;`
-
-### Port Already in Use
-
-- Change port: `php -S localhost:8001`
-
-### Database Tables Not Found
-
-- Run `php setup_db.php` to create tables
-- Ensure database exists and is accessible
-
-## Documentation
-
-For detailed project explanation and learning guide, see [PROJECT_EXPLANATION.md](PROJECT_EXPLANATION.md)
-
-## License
-
-Educational project for university coursework.
+| Role        | Username    | Password      |
+| ----------- | ----------- | ------------- |
+| **Admin**   | `admin`     | `admin123`    |
+| **Doctor**  | `dr_rahman` | `password123` |
+| **Patient** | `patient1`  | `password123` |
+
+## 📂 Project Structure
+
+- **`admin/`**: Administrative tools (Staff, Stock, Admissions).
+- **`doctor/`**: Clinical tools (Appointments, Prescriptions).
+- **`patient/`**: Patient portal (Booking, Profile, History).
+- **`templates/`**: Shared UI components (Header, Footer).
+- **`static/`**: CSS and assets.
+- **`db.php`**: Database connection handler.
+- **`functions.php`**: Core utility functions.

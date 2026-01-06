@@ -47,4 +47,40 @@ function getStatusBadgeClass($status) {
             return 'bg-gray-100 text-gray-800';
     }
 }
+
+function generateCSRFToken() {
+    if (!isset($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+function getCSRFToken() {
+    return generateCSRFToken();
+}
+
+function validateCSRFToken($token) {
+    if (!isset($_SESSION['csrf_token'])) {
+        return false;
+    }
+    return hash_equals($_SESSION['csrf_token'], $token);
+}
+
+function requireCSRFToken() {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $token = $_POST['csrf_token'] ?? '';
+        if (!validateCSRFToken($token)) {
+            http_response_code(403);
+            die("
+                <div class='flex items-center justify-center h-screen bg-gray-100'>
+                    <div class='text-center'>
+                        <h1 class='text-4xl font-bold text-red-600 mb-4'>403 Forbidden</h1>
+                        <p class='text-gray-600 mb-6'>Invalid security token. Please refresh the page and try again.</p>
+                        <a href='javascript:history.back()' class='px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700'>Go Back</a>
+                    </div>
+                </div>
+            ");
+        }
+    }
+}
 ?>

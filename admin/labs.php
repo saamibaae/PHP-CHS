@@ -24,6 +24,7 @@ include __DIR__ . '/../templates/header.php';
                     <th>Lab Name</th>
                     <th>Location</th>
                     <th>Phone</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -32,11 +33,18 @@ include __DIR__ . '/../templates/header.php';
                     <td><?= htmlspecialchars($lab['lab_name']) ?></td>
                     <td><?= htmlspecialchars($lab['location']) ?></td>
                     <td><?= htmlspecialchars($lab['phone']) ?></td>
+                    <td>
+                        <div class="btn-group">
+                            <a href="/admin/lab_form.php?id=<?= $lab['lab_id'] ?>" class="btn btn-sm btn-primary" title="Edit">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                        </div>
+                    </td>
                 </tr>
                 <?php endforeach; ?>
                 <?php if (empty($labs)): ?>
                 <tr>
-                    <td colspan="3" class="text-center">No labs found.</td>
+                    <td colspan="4" class="text-center">No labs found.</td>
                 </tr>
                 <?php endif; ?>
             </tbody>

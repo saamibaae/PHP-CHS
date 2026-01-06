@@ -12,9 +12,17 @@ if (!$hospital_info) {
     die("Hospital record not found. Please contact administrator.");
 }
 
-$stmt = $pdo->prepare("SELECT COUNT(DISTINCT patient_id) FROM core_appointment WHERE doctor_id IN (SELECT doctor_id FROM core_doctor WHERE hospital_id = ?)");
-$stmt->execute([$hospital_id]);
-$total_patients = $stmt->fetchColumn();
+if (!createAdmissionTableIfNeeded()) {
+    $admitted_patients = 0;
+} else {
+    try {
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM core_admission WHERE hospital_id = ? AND status = 'Admitted'");
+        $stmt->execute([$hospital_id]);
+        $admitted_patients = $stmt->fetchColumn();
+    } catch (PDOException $e) {
+        $admitted_patients = 0;
+    }
+}
 
 $stmt = $pdo->prepare("
     SELECT d.dept_name, d.floor, 
@@ -56,9 +64,9 @@ include '../templates/header.php';
                 </div>
                 <div class="ml-5 w-0 flex-1">
                     <dl>
-                        <dt class="text-sm font-medium text-gray-500 truncate">Patient Load</dt>
+                        <dt class="text-sm font-medium text-gray-500 truncate">Hospital Occupancy</dt>
                         <dd>
-                            <div class="text-lg font-medium text-gray-900"><?= $total_patients ?> / <?= $hospital_info['capacity'] ?></div>
+                            <div class="text-lg font-medium text-gray-900"><?= $admitted_patients ?> / <?= $hospital_info['capacity'] ?></div>
                         </dd>
                     </dl>
                 </div>
@@ -67,9 +75,12 @@ include '../templates/header.php';
         <div class="bg-gray-50 px-5 py-3">
             <div class="text-sm">
                 <div class="w-full bg-gray-200 rounded-full h-2.5">
-                    <div class="bg-blue-600 h-2.5 rounded-full" style="width: <?= min(100, ($total_patients / $hospital_info['capacity']) * 100) ?>%"></div>
+                    <div class="bg-blue-600 h-2.5 rounded-full" style="width: <?= min(100, ($admitted_patients / $hospital_info['capacity']) * 100) ?>%"></div>
                 </div>
-                <span class="text-gray-500 mt-1 block"><?= round(($total_patients / $hospital_info['capacity']) * 100) ?>% Capacity Used</span>
+                <span class="text-gray-500 mt-1 block"><?= round(($admitted_patients / $hospital_info['capacity']) * 100, 1) ?>% Capacity Used</span>
+                <a href="/admin/admissions.php" class="text-blue-600 hover:text-blue-800 text-xs mt-1 inline-block">
+                    <i class="fas fa-arrow-right mr-1"></i>Manage Admissions
+                </a>
             </div>
         </div>
     </div>
@@ -108,9 +119,6 @@ include '../templates/header.php';
             <h3 class="text-lg leading-6 font-medium text-gray-900">Recent Billing Summaries</h3>
             <p class="mt-1 max-w-2xl text-sm text-gray-500">Financial overview of recent transactions.</p>
         </div>
-        <button class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded text-sm">
-            Generate Report
-        </button>
     </div>
     <div class="border-t border-gray-200">
         <table class="min-w-full divide-y divide-gray-200">

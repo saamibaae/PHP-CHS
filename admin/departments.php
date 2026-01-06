@@ -36,7 +36,11 @@ include __DIR__ . '/../templates/header.php';
                     <td><?= htmlspecialchars($dept['extension'] ?? '-') ?></td>
                     <td><?= htmlspecialchars($dept['operating_hours']) ?></td>
                     <td>
-                        <a href="/admin/department_form.php?id=<?= $dept['dept_id'] ?>" class="btn-sm btn-secondary">Edit</a>
+                        <div class="btn-group">
+                            <a href="/admin/department_form.php?id=<?= $dept['dept_id'] ?>" class="btn btn-sm btn-primary" title="Edit">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                        </div>
                     </td>
                 </tr>
                 <?php endforeach; ?>

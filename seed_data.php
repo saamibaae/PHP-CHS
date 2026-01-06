@@ -41,7 +41,6 @@ try {
     $default_district_id = $stmt->fetchColumn();
 
     $hospitals = [
-        // Top 5 Government Hospitals
         [
             'type' => 'public',
             'name' => 'Dhaka Medical College',
@@ -117,7 +116,6 @@ try {
             'subsidies' => 1200000.00,
             'admin_username' => 'SSMC'
         ],
-        // Top 5 Private Hospitals
         [
             'type' => 'private',
             'name' => 'Square Hospitals Ltd.',
@@ -195,12 +193,10 @@ try {
     $pass_hash = password_hash('password123', PASSWORD_DEFAULT);
 
     foreach ($hospitals as $h) {
-        // Check if hospital exists by registration number
         $stmt = $pdo->prepare("SELECT hospital_id FROM core_hospital WHERE registration_no = ?");
         $stmt->execute([$h['reg']]);
         $hid = $stmt->fetchColumn();
         
-        // If not found by reg number, check by name (for DMC which might have different reg from setup_db.php)
         if (!$hid && isset($h['admin_username']) && $h['admin_username'] == 'DMC') {
             $stmt = $pdo->prepare("SELECT hospital_id FROM core_hospital WHERE name = ?");
             $stmt->execute([$h['name']]);
@@ -215,7 +211,6 @@ try {
             $hid = $pdo->lastInsertId();
 
             if ($h['type'] == 'public') {
-                // Check if public hospital record already exists
                 $stmt = $pdo->prepare("SELECT hospital_id FROM core_publichospital WHERE hospital_id = ?");
                 $stmt->execute([$hid]);
                 if (!$stmt->fetch()) {
@@ -223,7 +218,6 @@ try {
                         ->execute([$hid, $h['funding'], $h['accreditation'], $h['subsidies']]);
                 }
             } else {
-                // Check if private hospital record already exists
                 $stmt = $pdo->prepare("SELECT hospital_id FROM core_privatehospital WHERE hospital_id = ?");
                 $stmt->execute([$hid]);
                 if (!$stmt->fetch()) {
@@ -236,7 +230,6 @@ try {
             echo "Hospital already exists: {$h['name']}\n";
         }
         
-        // Create admin account for this hospital if it doesn't exist
         if (isset($h['admin_username']) && $hid) {
             $stmt = $pdo->prepare("SELECT id FROM core_customuser WHERE username = ? AND hospital_id = ?");
             $stmt->execute([$h['admin_username'], $hid]);
@@ -249,7 +242,6 @@ try {
             }
         }
         
-        // Store hospital code for doctor username generation
         if (isset($h['admin_username']) && $hid) {
             $hospital_codes[$hid] = strtoupper($h['admin_username']);
         }
@@ -270,7 +262,26 @@ try {
     }
     echo "Departments assigned to hospitals.\n";
 
-    // Create one doctor for each specialization in each hospital
+    $lab_types = [
+        ['name' => 'Main Laboratory', 'location' => 'Ground Floor, Building A', 'phone' => '01710000001'],
+        ['name' => 'Pathology Lab', 'location' => '1st Floor, Building B', 'phone' => '01710000002'],
+        ['name' => 'Microbiology Lab', 'location' => '2nd Floor, Building A', 'phone' => '01710000003'],
+        ['name' => 'Biochemistry Lab', 'location' => 'Ground Floor, Building C', 'phone' => '01710000004'],
+        ['name' => 'Hematology Lab', 'location' => '1st Floor, Building A', 'phone' => '01710000005']
+    ];
+    
+    foreach ($hospital_ids as $hid) {
+        foreach ($lab_types as $lab) {
+            $stmt = $pdo->prepare("SELECT lab_id FROM core_lab WHERE hospital_id = ? AND lab_name = ?");
+            $stmt->execute([$hid, $lab['name']]);
+            if (!$stmt->fetch()) {
+                $pdo->prepare("INSERT INTO core_lab (lab_name, location, phone, hospital_id) VALUES (?, ?, ?, ?)")
+                    ->execute([$lab['name'], $lab['location'], $lab['phone'], $hid]);
+            }
+        }
+    }
+    echo "Labs assigned to hospitals.\n";
+
     $specializations = ['Cardiology', 'Neurology', 'Orthopedics', 'Pediatrics', 'Internal Medicine', 'Surgery', 'Dermatology', 'Ophthalmology', 'ENT', 'Gynecology', 'Urology', 'Psychiatry', 'Radiology', 'Emergency Medicine'];
     $doctor_names = [
         'Cardiology' => ['Rahman', 'Hasan', 'Ali', 'Khan', 'Ahmed', 'Iqbal', 'Chowdhury', 'Hossain', 'Uddin', 'Karim'],
@@ -290,33 +301,27 @@ try {
     ];
     
     foreach ($hospital_ids as $hid) {
-        // Get hospital name and code
         $stmt = $pdo->prepare("SELECT name FROM core_hospital WHERE hospital_id = ?");
         $stmt->execute([$hid]);
         $hospital_name = $stmt->fetchColumn();
         $hospital_code = $hospital_codes[$hid] ?? strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $hospital_name), 0, 4));
         
         foreach ($specializations as $spec) {
-            // Get department ID for this specialization
             $stmt = $pdo->prepare("SELECT dept_id FROM core_department WHERE hospital_id = ? AND dept_name = ?");
             $stmt->execute([$hid, $spec]);
             $did = $stmt->fetchColumn();
             
             if (!$did) continue;
             
-            // Check if doctor already exists for this hospital and specialization
             $stmt = $pdo->prepare("SELECT doctor_id FROM core_doctor WHERE hospital_id = ? AND specialization = ?");
             $stmt->execute([$hid, $spec]);
             if ($stmt->fetch()) {
                 continue; // Doctor already exists for this specialization in this hospital
             }
             
-            // Generate username in format: {lowercase_hospital_code}_{UPPERCASE_SPECIALIZATION}
-            // Convert specialization to uppercase and replace spaces with underscores
             $spec_code = strtoupper(str_replace(' ', '_', $spec));
             $username = strtolower($hospital_code) . '_' . $spec_code;
             
-            // Check if username already exists (in case script is run multiple times)
             $stmt = $pdo->prepare("SELECT id FROM core_customuser WHERE username = ?");
             $stmt->execute([$username]);
             if ($stmt->fetch()) {
@@ -324,17 +329,14 @@ try {
                 continue;
             }
             
-            // Get a name from the pool for this specialization
             $name_pool = $doctor_names[$spec];
             $first_name = $name_pool[array_rand($name_pool)];
             $full_name = 'Dr. ' . $first_name;
             
-            // Create user account
             $pdo->prepare("INSERT INTO core_customuser (username, password, email, first_name, role, hospital_id) VALUES (?, ?, ?, ?, 'DOCTOR', ?)")
                 ->execute([$username, $pass_hash, "{$username}@example.com", $full_name, $hid]);
             $uid = $pdo->lastInsertId();
             
-            // Create doctor record
             $lic = 'BMDC-' . str_pad(rand(10000, 99999), 5, '0', STR_PAD_LEFT);
             $phone = '017' . str_pad(rand(10000000, 99999999), 8, '0', STR_PAD_LEFT);
             $genders = ['M', 'F'];
@@ -370,7 +372,6 @@ try {
         }
     }
 
-    // Create sample appointments for patients
     $stmt = $pdo->query("SELECT patient_id FROM core_patient LIMIT 3");
     $patient_ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
     
@@ -380,7 +381,6 @@ try {
     if (!empty($patient_ids) && !empty($doctor_ids)) {
         $appointment_count = 0;
         foreach ($patient_ids as $pid) {
-            // Create 1-2 appointments per patient
             $num_appts = rand(1, 2);
             for ($i = 0; $i < $num_appts; $i++) {
                 $did = $doctor_ids[array_rand($doctor_ids)];
@@ -399,6 +399,107 @@ try {
         }
         if ($appointment_count > 0) {
             echo "Created $appointment_count sample appointments.\n";
+        }
+    }
+
+    $manufacturers = [
+        ['name' => 'Square Pharmaceuticals Ltd.', 'phone' => '01700000001', 'address' => 'Dhaka, Bangladesh', 'license' => 'MANUF-001'],
+        ['name' => 'Beximco Pharmaceuticals Ltd.', 'phone' => '01700000002', 'address' => 'Dhaka, Bangladesh', 'license' => 'MANUF-002'],
+        ['name' => 'Incepta Pharmaceuticals Ltd.', 'phone' => '01700000003', 'address' => 'Dhaka, Bangladesh', 'license' => 'MANUF-003'],
+        ['name' => 'Renata Limited', 'phone' => '01700000004', 'address' => 'Dhaka, Bangladesh', 'license' => 'MANUF-004'],
+        ['name' => 'ACI Limited', 'phone' => '01700000005', 'address' => 'Dhaka, Bangladesh', 'license' => 'MANUF-005']
+    ];
+
+    $manufacturer_ids = [];
+    foreach ($manufacturers as $m) {
+        $stmt = $pdo->prepare("SELECT manufacturer_id FROM core_manufacturer WHERE license_no = ?");
+        $stmt->execute([$m['license']]);
+        $mid = $stmt->fetchColumn();
+        
+        if (!$mid) {
+            $stmt = $pdo->prepare("INSERT INTO core_manufacturer (name, phone, address, license_no) VALUES (?, ?, ?, ?)");
+            $stmt->execute([$m['name'], $m['phone'], $m['address'], $m['license']]);
+            $mid = $pdo->lastInsertId();
+            echo "Added Manufacturer: {$m['name']}\n";
+        }
+        $manufacturer_ids[] = $mid;
+    }
+
+    $common_medicines = [
+        ['name' => 'Paracetamol 500mg', 'type' => 'Tablet', 'dosage' => '500mg per tablet', 'side_effects' => 'Rare: skin rash'],
+        ['name' => 'Amoxicillin 500mg', 'type' => 'Capsule', 'dosage' => '500mg per capsule', 'side_effects' => 'Nausea, diarrhea'],
+        ['name' => 'Ibuprofen 400mg', 'type' => 'Tablet', 'dosage' => '400mg per tablet', 'side_effects' => 'Stomach upset'],
+        ['name' => 'Omeprazole 20mg', 'type' => 'Capsule', 'dosage' => '20mg per capsule', 'side_effects' => 'Headache, diarrhea'],
+        ['name' => 'Cetirizine 10mg', 'type' => 'Tablet', 'dosage' => '10mg per tablet', 'side_effects' => 'Drowsiness'],
+        ['name' => 'Metformin 500mg', 'type' => 'Tablet', 'dosage' => '500mg per tablet', 'side_effects' => 'Nausea, stomach upset'],
+        ['name' => 'Amlodipine 5mg', 'type' => 'Tablet', 'dosage' => '5mg per tablet', 'side_effects' => 'Dizziness, swelling'],
+        ['name' => 'Atorvastatin 20mg', 'type' => 'Tablet', 'dosage' => '20mg per tablet', 'side_effects' => 'Muscle pain'],
+        ['name' => 'Azithromycin 500mg', 'type' => 'Tablet', 'dosage' => '500mg per tablet', 'side_effects' => 'Nausea, diarrhea'],
+        ['name' => 'Ciprofloxacin 500mg', 'type' => 'Tablet', 'dosage' => '500mg per tablet', 'side_effects' => 'Nausea, dizziness'],
+        ['name' => 'Diclofenac 50mg', 'type' => 'Tablet', 'dosage' => '50mg per tablet', 'side_effects' => 'Stomach pain'],
+        ['name' => 'Furosemide 40mg', 'type' => 'Tablet', 'dosage' => '40mg per tablet', 'side_effects' => 'Dehydration'],
+        ['name' => 'Losartan 50mg', 'type' => 'Tablet', 'dosage' => '50mg per tablet', 'side_effects' => 'Dizziness'],
+        ['name' => 'Pantoprazole 40mg', 'type' => 'Tablet', 'dosage' => '40mg per tablet', 'side_effects' => 'Headache'],
+        ['name' => 'Salbutamol Inhaler', 'type' => 'Inhaler', 'dosage' => '100mcg per puff', 'side_effects' => 'Tremor, palpitations']
+    ];
+
+    $medicine_ids = [];
+    foreach ($common_medicines as $med) {
+        $stmt = $pdo->prepare("SELECT medicine_id FROM core_medicine WHERE name = ?");
+        $stmt->execute([$med['name']]);
+        $med_id = $stmt->fetchColumn();
+        
+        if (!$med_id) {
+            $manufacturer_id = $manufacturer_ids[array_rand($manufacturer_ids)];
+            $stmt = $pdo->prepare("INSERT INTO core_medicine (name, type, dosage_info, side_effects, manufacturer_id) VALUES (?, ?, ?, ?, ?)");
+            $stmt->execute([$med['name'], $med['type'], $med['dosage'], $med['side_effects'], $manufacturer_id]);
+            $med_id = $pdo->lastInsertId();
+            echo "Added Medicine: {$med['name']}\n";
+        }
+        $medicine_ids[] = $med_id;
+    }
+
+    foreach ($hospital_ids as $hid) {
+        $stmt = $pdo->prepare("SELECT pharmacy_id FROM core_pharmacy WHERE hospital_id = ?");
+        $stmt->execute([$hid]);
+        $pharmacy_id = $stmt->fetchColumn();
+        
+        if (!$pharmacy_id) {
+            $stmt = $pdo->prepare("SELECT name FROM core_hospital WHERE hospital_id = ?");
+            $stmt->execute([$hid]);
+            $hospital_name = $stmt->fetchColumn();
+            
+            $pharmacy_name = $hospital_name . ' Pharmacy';
+            $location = 'Ground Floor, ' . $hospital_name;
+            $employee_count = rand(5, 15);
+            
+            $stmt = $pdo->prepare("INSERT INTO core_pharmacy (name, location, employee_count, hospital_id) VALUES (?, ?, ?, ?)");
+            $stmt->execute([$pharmacy_name, $location, $employee_count, $hid]);
+            $pharmacy_id = $pdo->lastInsertId();
+            echo "Added Pharmacy: {$pharmacy_name} for {$hospital_name}\n";
+        }
+        
+        $stock_added = 0;
+        foreach ($medicine_ids as $med_id) {
+            $stmt = $pdo->prepare("SELECT pharmacy_medicine_id FROM core_pharmacymedicine WHERE pharmacy_id = ? AND medicine_id = ?");
+            $stmt->execute([$pharmacy_id, $med_id]);
+            if ($stmt->fetch()) {
+                continue; // Stock already exists
+            }
+            
+            $stock_quantity = rand(50, 500);
+            $unit_price = rand(5, 200) + (rand(0, 99) / 100); // Price between 5.00 and 200.99
+            $expiry_date = date('Y-m-d', strtotime('+' . rand(6, 36) . ' months'));
+            $batch_number = 'BATCH-' . strtoupper(substr(md5($pharmacy_id . $med_id . microtime(true) . rand()), 0, 8));
+            $last_restocked = date('Y-m-d', strtotime('-' . rand(0, 90) . ' days'));
+            
+            $stmt = $pdo->prepare("INSERT INTO core_pharmacymedicine (pharmacy_id, medicine_id, stock_quantity, unit_price, expiry_date, batch_number, last_restocked) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$pharmacy_id, $med_id, $stock_quantity, $unit_price, $expiry_date, $batch_number, $last_restocked]);
+            $stock_added++;
+        }
+        
+        if ($stock_added > 0) {
+            echo "  Added {$stock_added} stock items to {$pharmacy_name}\n";
         }
     }
 

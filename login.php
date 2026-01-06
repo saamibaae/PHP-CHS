@@ -9,25 +9,28 @@ if (isset($_SESSION['user_id'])) {
 $error = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = $_POST['username'] ?? '';
+    $username = trim($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
     
-    // Case-insensitive username lookup
-    $stmt = $pdo->prepare("SELECT * FROM core_customuser WHERE LOWER(username) = LOWER(?)");
-    $stmt->execute([$username]);
-    $user = $stmt->fetch();
-    
-    if ($user && verifyPassword($password, $user['password'])) {
-        $_SESSION['user_id'] = $user['id'];
-        $_SESSION['username'] = $user['username'];
-        $_SESSION['role'] = $user['role'];
-        $_SESSION['hospital_id'] = $user['hospital_id'];
-        
-        setFlash("Welcome back, " . htmlspecialchars($user['username']));
-        header('Location: dashboard.php');
-        exit;
+    if (empty($username) || empty($password)) {
+        $error = "Username and password are required.";
     } else {
-        $error = "Invalid username or password.";
+        $stmt = $pdo->prepare("SELECT * FROM core_customuser WHERE LOWER(username) = LOWER(?)");
+        $stmt->execute([$username]);
+        $user = $stmt->fetch();
+        
+        if ($user && verifyPassword($password, $user['password'])) {
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['username'] = $user['username'];
+            $_SESSION['role'] = $user['role'];
+            $_SESSION['hospital_id'] = $user['hospital_id'];
+            
+            setFlash("Welcome back, " . htmlspecialchars($user['username']));
+            header('Location: dashboard.php');
+            exit;
+        } else {
+            $error = "Invalid username or password.";
+        }
     }
 }
 ?>
@@ -66,11 +69,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         <?php endif; ?>
 
-        <form class="mt-8 space-y-6" method="POST">
+        <form class="mt-8 space-y-6" method="POST" action="">
             <div class="rounded-md shadow-sm -space-y-px">
                 <div>
                     <label for="username" class="sr-only">Username</label>
-                    <input id="username" name="username" type="text" required class="appearance-none rounded-none rounded-t-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" placeholder="Username">
+                    <input id="username" name="username" type="text" required class="appearance-none rounded-none rounded-t-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" placeholder="Username" value="<?= htmlspecialchars($_POST['username'] ?? '') ?>">
                 </div>
                 <div>
                     <label for="password" class="sr-only">Password</label>

@@ -44,6 +44,48 @@ $stmt = $pdo->prepare("
 $stmt->execute([$patient_id]);
 $prescriptions = $stmt->fetchAll();
 
+try {
+    $check_stmt = $pdo->query("SHOW COLUMNS FROM core_labtest LIKE 'bill_id'");
+    $bill_id_exists = $check_stmt->rowCount() > 0;
+    
+    if ($bill_id_exists) {
+        $stmt = $pdo->prepare("
+            SELECT lt.*, b.status as bill_status, b.bill_id,
+                   d.full_name as doctor_name
+            FROM core_labtest lt
+            LEFT JOIN core_bill b ON lt.bill_id = b.bill_id
+            INNER JOIN core_doctor d ON lt.ordered_by_id = d.doctor_id
+            WHERE lt.patient_id = ?
+            ORDER BY lt.date_and_time DESC
+            LIMIT 10
+        ");
+    } else {
+        $stmt = $pdo->prepare("
+            SELECT lt.*, NULL as bill_status, NULL as bill_id,
+                   d.full_name as doctor_name
+            FROM core_labtest lt
+            INNER JOIN core_doctor d ON lt.ordered_by_id = d.doctor_id
+            WHERE lt.patient_id = ?
+            ORDER BY lt.date_and_time DESC
+            LIMIT 10
+        ");
+    }
+    $stmt->execute([$patient_id]);
+    $lab_tests = $stmt->fetchAll();
+} catch (PDOException $e) {
+    $stmt = $pdo->prepare("
+        SELECT lt.*, NULL as bill_status, NULL as bill_id,
+               d.full_name as doctor_name
+        FROM core_labtest lt
+        INNER JOIN core_doctor d ON lt.ordered_by_id = d.doctor_id
+        WHERE lt.patient_id = ?
+        ORDER BY lt.date_and_time DESC
+        LIMIT 10
+    ");
+    $stmt->execute([$patient_id]);
+    $lab_tests = $stmt->fetchAll();
+}
+
 include '../templates/header.php';
 ?>
 
@@ -123,6 +165,62 @@ include '../templates/header.php';
             </table>
         </div>
     </div>
+
+    <?php if (!empty($lab_tests)): ?>
+    <div class="bg-white shadow rounded-lg overflow-hidden border-t-4 border-yellow-500 md:col-span-2">
+        <div class="px-6 py-4 bg-white border-b border-gray-200 flex justify-between items-center">
+            <h3 class="text-lg font-medium text-gray-900">
+                <i class="fas fa-vial text-yellow-500 mr-2"></i> Lab Test Updates
+            </h3>
+            <a href="/patient/lab_tests.php" class="text-sm text-yellow-600 hover:text-yellow-800">View All</a>
+        </div>
+        <ul class="divide-y divide-gray-200">
+            <?php foreach ($lab_tests as $lt): ?>
+            <li class="px-6 py-4 hover:bg-gray-50 transition <?= $lt['status'] == 'Completed' ? 'bg-green-50 border-l-4 border-green-500' : '' ?>">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                        <div class="flex items-center">
+                            <p class="text-sm font-bold text-gray-900">
+                                <?php if ($lt['status'] == 'Completed'): ?>
+                                    <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                                <?php else: ?>
+                                    <i class="fas fa-hourglass-half text-blue-500 mr-2"></i>
+                                <?php endif; ?>
+                                Lab Test #<?= $lt['test_id'] ?>
+                            </p>
+                            <span class="ml-2 badge <?= $lt['status'] == 'Completed' ? 'badge-success' : 'badge-warning' ?>">
+                                <?= htmlspecialchars($lt['status']) ?>
+                            </span>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">
+                            Ordered by: Dr. <?= htmlspecialchars($lt['doctor_name']) ?> | 
+                            <?= date('M d, Y', strtotime($lt['date_and_time'])) ?>
+                        </p>
+                        <?php if ($lt['status'] == 'Completed'): ?>
+                            <div class="mt-2 flex items-center space-x-3">
+                                <a href="/patient/lab_test_detail.php?id=<?= $lt['test_id'] ?>" 
+                                   class="inline-flex items-center px-3 py-1 bg-green-600 text-white text-xs font-semibold rounded hover:bg-green-700 transition">
+                                    <i class="fas fa-eye mr-1"></i>View Results
+                                </a>
+                                <?php if ($lt['bill_id']): ?>
+                                    <span class="text-xs <?= $lt['bill_status'] == 'Paid' ? 'text-green-600' : 'text-yellow-600' ?>">
+                                        <i class="fas fa-<?= $lt['bill_status'] == 'Paid' ? 'check' : 'clock' ?> mr-1"></i>
+                                        Bill: <?= htmlspecialchars($lt['bill_status']) ?>
+                                    </span>
+                                <?php endif; ?>
+                            </div>
+                        <?php else: ?>
+                            <p class="text-xs text-blue-600 mt-1">
+                                <i class="fas fa-info-circle mr-1"></i>Test is being processed by admin.
+                            </p>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </li>
+            <?php endforeach; ?>
+        </ul>
+    </div>
+    <?php endif; ?>
 
     <div class="bg-white shadow rounded-lg overflow-hidden md:col-span-2 border-t-4 border-purple-500">
         <div class="px-6 py-4 bg-white border-b border-gray-200">
