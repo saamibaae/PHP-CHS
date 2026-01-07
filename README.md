@@ -64,3 +64,6 @@ If you ran `seed_data.php`, use these credentials to log in:
 | **Admin**   | `dmc`            | `password123` |
 | **Doctor**  | `dmc_cardiology` | `password123` |
 | **Patient** | `patient1`       | `password123` |
+
+All the features explanation written in FEATURES.md file.
+
