@@ -63,4 +63,4 @@ If you ran `seed_data.php`, use these credentials to log in:
 | ----------- | ---------------- | ------------- |
 | **Admin**   | `dmc`            | `password123` |
 | **Doctor**  | `dmc_cardiology` | `password123` |
-| **Patient** | `sami1`          | `123456`      |
+| **Patient** | `patient1`       | `password123` |
